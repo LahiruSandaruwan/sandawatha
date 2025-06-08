@@ -6,9 +6,12 @@ class ProfileModel extends BaseModel {
     
     protected function getAllowedColumns() {
         return [
-            'id', 'user_id', 'first_name', 'last_name', 'date_of_birth', 'gender', 
-            'district', 'religion', 'caste', 'occupation', 'education', 'height', 
-            'weight', 'marital_status', 'profile_photo', 'profile_completion',
+            'id', 'user_id', 'first_name', 'last_name', 'date_of_birth', 'gender',
+            'religion', 'caste', 'district', 'city', 'marital_status', 'height_cm',
+            'education', 'occupation', 'income_lkr', 'bio', 'goals',
+            'wants_migration', 'career_focused', 'wants_early_marriage',
+            'profile_photo', 'video_intro', 'horoscope_file', 'health_report',
+            'voice_message', 'view_count', 'profile_completion',
             'created_at', 'updated_at'
         ];
     }

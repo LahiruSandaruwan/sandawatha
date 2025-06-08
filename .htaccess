@@ -6,10 +6,15 @@
 RewriteEngine On
 
 # Set the base directory
-RewriteBase /
+RewriteBase /sandawatha/
 
 # Allow direct access to files in public directory
-RewriteCond %{REQUEST_URI} ^/public/
+RewriteCond %{REQUEST_URI} ^/sandawatha/public/
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Allow direct access to uploaded files
+RewriteCond %{REQUEST_URI} ^/sandawatha/uploads/
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 

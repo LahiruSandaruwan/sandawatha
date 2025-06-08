@@ -3,6 +3,17 @@ RewriteEngine On
 # If your project lives at http://localhost/sandawatha/, set RewriteBase accordingly:
 RewriteBase /sandawatha/
 
+# Increase upload limits
+php_value upload_max_filesize 50M
+php_value post_max_size 50M
+php_value max_execution_time 300
+php_value max_input_time 300
+
+# Allow access to uploads directory
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+</IfModule>
+
 # If the requested resource is a real file or directory, serve it directly
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d

@@ -89,7 +89,7 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-person-circle"></i>
-                                <?= htmlspecialchars($_SESSION['user_email'] ?? 'User') ?>
+                                <?= htmlspecialchars($_SESSION['user_name'] ?? $_SESSION['user_email']) ?>
                             </a>
                             <ul class="dropdown-menu">
                                 <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>

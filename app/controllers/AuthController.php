@@ -1,6 +1,7 @@
 <?php
 require_once 'BaseController.php';
 require_once SITE_ROOT . '/app/models/UserModel.php';
+require_once SITE_ROOT . '/app/models/ProfileModel.php';
 
 class AuthController extends BaseController {
     private $userModel;
@@ -53,11 +54,16 @@ class AuthController extends BaseController {
             $this->redirectWithMessage('/verify-email', 'Please verify your email address first.', 'warning');
         }
         
+        // Get user profile information
+        $profileModel = new ProfileModel();
+        $profile = $profileModel->findByUserId($user['id']);
+        
         // Set session variables
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_email'] = $user['email'];
         $_SESSION['user_role'] = $user['role'];
         $_SESSION['dark_mode'] = $user['dark_mode'];
+        $_SESSION['user_name'] = $profile ? trim($profile['first_name'] . ' ' . $profile['last_name']) : null;
         
         // Log the login
         $this->userModel->logLogin(

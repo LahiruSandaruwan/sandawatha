@@ -175,6 +175,10 @@ class ProfileController extends BaseController {
             if ($success) {
                 // Update profile completion percentage
                 $this->profileModel->updateProfileCompletion($currentUser['id']);
+                
+                // Update session with user's full name
+                $_SESSION['user_name'] = trim($data['first_name'] . ' ' . $data['last_name']);
+                
                 $this->redirectWithMessage('/profile/edit', 'Profile updated successfully!', 'success');
             } else {
                 $this->redirectWithMessage('/profile/edit', 'Failed to update profile.', 'error');

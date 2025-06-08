@@ -15,7 +15,7 @@
                     <h5 class="card-title mb-0">Personal Information</h5>
                 </div>
                 <div class="card-body">
-                    <form action="/sandawatha/profile/update" method="POST" id="profileForm">
+                    <form action="<?= BASE_URL ?>/profile/update" method="POST" id="profileForm">
                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
                         
                         <!-- Basic Information -->
@@ -185,7 +185,7 @@
                         </div>
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="/sandawatha/dashboard" class="btn btn-outline-secondary me-md-2">Cancel</a>
+                            <a href="<?= BASE_URL ?>/dashboard" class="btn btn-outline-secondary me-md-2">Cancel</a>
                             <button type="submit" class="btn btn-primary">Update Profile</button>
                         </div>
                     </form>
@@ -277,16 +277,28 @@
 </div>
 
 <script>
+// Define base URL for API endpoints
+const BASE_URL = '<?= BASE_URL ?>';
+
 // Handle photo upload
 document.getElementById('photoUploadForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(this);
     
-    fetch('/sandawatha/profile/upload-photo', {
+    fetch(BASE_URL + '/profile/upload-photo', {
         method: 'POST',
-        body: formData
+        body: formData,
+        credentials: 'same-origin',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.status);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             location.reload();
@@ -295,6 +307,7 @@ document.getElementById('photoUploadForm').addEventListener('submit', function(e
         }
     })
     .catch(error => {
+        console.error('Upload error:', error);
         alert('Upload failed: ' + error.message);
     });
 });
@@ -304,11 +317,20 @@ document.getElementById('videoUploadForm').addEventListener('submit', function(e
     e.preventDefault();
     const formData = new FormData(this);
     
-    fetch('/sandawatha/profile/upload-video', {
+    fetch(BASE_URL + '/profile/upload-video', {
         method: 'POST',
-        body: formData
+        body: formData,
+        credentials: 'same-origin',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.status);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             location.reload();
@@ -317,6 +339,7 @@ document.getElementById('videoUploadForm').addEventListener('submit', function(e
         }
     })
     .catch(error => {
+        console.error('Upload error:', error);
         alert('Upload failed: ' + error.message);
     });
 });
@@ -326,11 +349,20 @@ document.getElementById('horoscopeUploadForm').addEventListener('submit', functi
     e.preventDefault();
     const formData = new FormData(this);
     
-    fetch('/sandawatha/profile/upload-horoscope', {
+    fetch(BASE_URL + '/profile/upload-horoscope', {
         method: 'POST',
-        body: formData
+        body: formData,
+        credentials: 'same-origin',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.status);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             location.reload();
@@ -339,6 +371,7 @@ document.getElementById('horoscopeUploadForm').addEventListener('submit', functi
         }
     })
     .catch(error => {
+        console.error('Upload error:', error);
         alert('Upload failed: ' + error.message);
     });
 });
@@ -348,11 +381,20 @@ document.getElementById('healthUploadForm').addEventListener('submit', function(
     e.preventDefault();
     const formData = new FormData(this);
     
-    fetch('/sandawatha/profile/upload-health', {
+    fetch(BASE_URL + '/profile/upload-health', {
         method: 'POST',
-        body: formData
+        body: formData,
+        credentials: 'same-origin',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.status);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             location.reload();
@@ -361,6 +403,7 @@ document.getElementById('healthUploadForm').addEventListener('submit', function(
         }
     })
     .catch(error => {
+        console.error('Upload error:', error);
         alert('Upload failed: ' + error.message);
     });
 });
