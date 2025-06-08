@@ -96,29 +96,9 @@
                                     <?php if ($profile && $profile['profile_photo']): ?>
                                         <span class="badge bg-success"><i class="bi bi-check"></i></span>
                                     <?php else: ?>
-                                        <span class="badge bg-danger"><i class="bi bi-x"></i></span>
-                                    <?php endif; ?>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    Bio Description
-                                    <?php if ($profile && $profile['bio']): ?>
-                                        <span class="badge bg-success"><i class="bi bi-check"></i></span>
-                                    <?php else: ?>
-                                        <span class="badge bg-danger"><i class="bi bi-x"></i></span>
-                                    <?php endif; ?>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    Video Introduction
-                                    <?php if ($profile && $profile['video_intro']): ?>
-                                        <span class="badge bg-success"><i class="bi bi-check"></i></span>
-                                    <?php else: ?>
                                         <span class="badge bg-warning"><i class="bi bi-x"></i></span>
                                     <?php endif; ?>
                                 </li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <ul class="list-group list-group-flush">
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     Horoscope
                                     <?php if ($profile && $profile['horoscope_file']): ?>
@@ -135,6 +115,10 @@
                                         <span class="badge bg-warning"><i class="bi bi-x"></i></span>
                                     <?php endif; ?>
                                 </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-group list-group-flush">
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     Goals & Preferences
                                     <?php if ($profile && $profile['goals']): ?>

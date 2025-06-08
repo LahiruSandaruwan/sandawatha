@@ -2,9 +2,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const profileForm = document.getElementById('profileForm');
     const photoUploadForm = document.getElementById('photoUploadForm');
-    const videoUploadForm = document.getElementById('videoUploadForm');
     const horoscopeUploadForm = document.getElementById('horoscopeUploadForm');
-    const healthUploadForm = document.getElementById('healthUploadForm');
 
     // Form validation
     if (profileForm) {
@@ -132,20 +130,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Health report upload validation
-    const healthInput = document.querySelector('input[name="health_report"]');
-    if (healthInput) {
-        healthInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const maxSize = 10 * 1024 * 1024; // 10MB
-                const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-                
-                if (!validateFileSize(file, maxSize, 'Health report') || 
-                    !validateFileType(file, allowedTypes, 'Health report')) {
-                    this.value = '';
-                }
-            }
-        });
-    }
+
 }); 

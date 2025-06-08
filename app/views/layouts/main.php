@@ -18,6 +18,8 @@
     <meta name="description" content="<?= $description ?? 'Find your perfect life partner in Sri Lanka. Join thousands of verified profiles on Sandawatha.lk - the most trusted matrimonial platform.' ?>">
     <meta name="keywords" content="matrimony, marriage, Sri Lanka, Buddhist, Hindu, Christian, Muslim, profiles">
     <meta name="author" content="Sandawatha.lk">
+    <meta name="base-url" content="<?= BASE_URL ?>">
+    <meta name="csrf-token" content="<?= $csrf_token ?? '' ?>">
     
     <!-- Favicon -->
     
@@ -26,9 +28,6 @@
     <meta property="og:description" content="<?= $description ?? 'Find your perfect life partner in Sri Lanka' ?>">
     <meta property="og:image" content="<?= BASE_URL ?>/assets/images/og-image.jpg">
     <meta property="og:url" content="<?= BASE_URL ?>">
-    
-    <!-- CSRF Token for AJAX -->
-    <meta name="csrf-token" content="<?= $csrf_token ?? '' ?>">
 </head>
 <body>
     <!-- Cookie Consent Banner -->

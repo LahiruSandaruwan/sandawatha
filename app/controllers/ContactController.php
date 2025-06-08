@@ -25,20 +25,12 @@ class ContactController extends BaseController {
             $this->json(['success' => false, 'message' => 'Not authenticated'], 401);
         }
         
-        $profileId = $_POST['profile_id'] ?? '';
+        $receiverId = $_POST['profile_id'] ?? '';
         $message = $this->sanitizeInput($_POST['message'] ?? '');
         
-        if (empty($profileId)) {
+        if (empty($receiverId)) {
             $this->json(['success' => false, 'message' => 'Profile ID is required'], 400);
         }
-        
-        // Get the profile to find user ID
-        $profile = $this->profileModel->find($profileId);
-        if (!$profile) {
-            $this->json(['success' => false, 'message' => 'Profile not found'], 404);
-        }
-        
-        $receiverId = $profile['user_id'];
         
         // Check if user is trying to send request to themselves
         if ($currentUser['id'] == $receiverId) {
@@ -59,7 +51,7 @@ class ContactController extends BaseController {
             $requestId = $this->contactModel->sendRequest($currentUser['id'], $receiverId, $message);
             
             // Log activity
-            $this->logUserActivity($currentUser['id'], 'contact_request_sent', "Sent contact request to profile ID: {$profileId}");
+            $this->logUserActivity($currentUser['id'], 'contact_request_sent', "Sent contact request to user ID: {$receiverId}");
             
             $this->json([
                 'success' => true,

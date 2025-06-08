@@ -194,6 +194,116 @@
                     </form>
                 </div>
             </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Privacy Settings</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Control who can see your profile information</p>
+                    
+                    <?php
+                    $privacySettings = json_decode($profile['privacy_settings'] ?? '{}', true) ?? [
+                        'photo' => 'public',
+                        'contact' => 'private',
+                        'horoscope' => 'private',
+                        'income' => 'private',
+                        'bio' => 'public',
+                        'education' => 'public',
+                        'occupation' => 'public',
+                        'goals' => 'private'
+                    ];
+                    ?>
+                    
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Information</th>
+                                    <th>Visibility</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Profile Photo</td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="privacy_settings[photo]">
+                                            <option value="public" <?= ($privacySettings['photo'] ?? '') === 'public' ? 'selected' : '' ?>>Public</option>
+                                            <option value="private" <?= ($privacySettings['photo'] ?? '') === 'private' ? 'selected' : '' ?>>After Contact</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Contact Information</td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="privacy_settings[contact]">
+                                            <option value="public" <?= ($privacySettings['contact'] ?? '') === 'public' ? 'selected' : '' ?>>Public</option>
+                                            <option value="private" <?= ($privacySettings['contact'] ?? '') === 'private' ? 'selected' : '' ?>>After Contact</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Horoscope</td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="privacy_settings[horoscope]">
+                                            <option value="public" <?= ($privacySettings['horoscope'] ?? '') === 'public' ? 'selected' : '' ?>>Public</option>
+                                            <option value="private" <?= ($privacySettings['horoscope'] ?? '') === 'private' ? 'selected' : '' ?>>After Contact</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Income</td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="privacy_settings[income]">
+                                            <option value="public" <?= ($privacySettings['income'] ?? '') === 'public' ? 'selected' : '' ?>>Public</option>
+                                            <option value="private" <?= ($privacySettings['income'] ?? '') === 'private' ? 'selected' : '' ?>>After Contact</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Bio</td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="privacy_settings[bio]">
+                                            <option value="public" <?= ($privacySettings['bio'] ?? '') === 'public' ? 'selected' : '' ?>>Public</option>
+                                            <option value="private" <?= ($privacySettings['bio'] ?? '') === 'private' ? 'selected' : '' ?>>After Contact</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Education</td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="privacy_settings[education]">
+                                            <option value="public" <?= ($privacySettings['education'] ?? '') === 'public' ? 'selected' : '' ?>>Public</option>
+                                            <option value="private" <?= ($privacySettings['education'] ?? '') === 'private' ? 'selected' : '' ?>>After Contact</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Occupation</td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="privacy_settings[occupation]">
+                                            <option value="public" <?= ($privacySettings['occupation'] ?? '') === 'public' ? 'selected' : '' ?>>Public</option>
+                                            <option value="private" <?= ($privacySettings['occupation'] ?? '') === 'private' ? 'selected' : '' ?>>After Contact</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Goals</td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="privacy_settings[goals]">
+                                            <option value="public" <?= ($privacySettings['goals'] ?? '') === 'public' ? 'selected' : '' ?>>Public</option>
+                                            <option value="private" <?= ($privacySettings['goals'] ?? '') === 'private' ? 'selected' : '' ?>>After Contact</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i> "Public" means visible to all users. "After Contact" means visible only after contact request is accepted.
+                    </small>
+                </div>
+            </div>
         </div>
 
         <!-- Photo Upload Section -->
@@ -229,21 +339,6 @@
                     <h5 class="card-title mb-0">Additional Files</h5>
                 </div>
                 <div class="card-body">
-                    <!-- Video Upload -->
-                    <div class="mb-3">
-                        <label class="form-label">Video Introduction</label>
-                        <?php if (!empty($profile['video_intro'])): ?>
-                            <p class="text-success small">
-                                <i class="bi bi-check-circle"></i> Video uploaded
-                            </p>
-                        <?php endif; ?>
-                        <form id="videoUploadForm" enctype="multipart/form-data">
-                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
-                            <input type="file" class="form-control mb-2" name="video" accept="video/*">
-                            <button type="submit" class="btn btn-sm btn-outline-primary">Upload Video</button>
-                        </form>
-                    </div>
-
                     <!-- Horoscope Upload -->
                     <div class="mb-3">
                         <label class="form-label">Horoscope</label>
@@ -256,21 +351,6 @@
                             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
                             <input type="file" class="form-control mb-2" name="horoscope" accept=".pdf,.jpg,.jpeg,.png">
                             <button type="submit" class="btn btn-sm btn-outline-primary">Upload Horoscope</button>
-                        </form>
-                    </div>
-
-                    <!-- Health Report Upload -->
-                    <div class="mb-3">
-                        <label class="form-label">Health Report</label>
-                        <?php if (!empty($profile['health_report'])): ?>
-                            <p class="text-success small">
-                                <i class="bi bi-check-circle"></i> Health report uploaded
-                            </p>
-                        <?php endif; ?>
-                        <form id="healthUploadForm" enctype="multipart/form-data">
-                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
-                            <input type="file" class="form-control mb-2" name="health_report" accept=".pdf,.jpg,.jpeg,.png">
-                            <button type="submit" class="btn btn-sm btn-outline-primary">Upload Report</button>
                         </form>
                     </div>
                 </div>
@@ -315,76 +395,12 @@ document.getElementById('photoUploadForm').addEventListener('submit', function(e
     });
 });
 
-// Handle video upload
-document.getElementById('videoUploadForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    
-    fetch(BASE_URL + '/profile/upload-video', {
-        method: 'POST',
-        body: formData,
-        credentials: 'same-origin',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok: ' + response.status);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert('Error: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Upload error:', error);
-        alert('Upload failed: ' + error.message);
-    });
-});
-
 // Handle horoscope upload
 document.getElementById('horoscopeUploadForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(this);
     
     fetch(BASE_URL + '/profile/upload-horoscope', {
-        method: 'POST',
-        body: formData,
-        credentials: 'same-origin',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok: ' + response.status);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert('Error: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Upload error:', error);
-        alert('Upload failed: ' + error.message);
-    });
-});
-
-// Handle health report upload
-document.getElementById('healthUploadForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    
-    fetch(BASE_URL + '/profile/upload-health', {
         method: 'POST',
         body: formData,
         credentials: 'same-origin',

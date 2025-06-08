@@ -226,19 +226,19 @@
                         
                         <div class="card-footer bg-transparent">
                             <div class="btn-group w-100">
-                                <a href="<?= BASE_URL ?>/profile/<?= $profile['id'] ?>" class="btn btn-primary btn-sm">
+                                <a href="<?= BASE_URL ?>/profile/<?= $profile['user_id'] ?>" class="btn btn-primary btn-sm">
                                     <i class="bi bi-eye"></i> View Profile
                                 </a>
                                 
                                 <?php if (isset($_SESSION['user_id'])): ?>
                                     <button class="btn <?= isset($profile['is_favorite']) && $profile['is_favorite'] ? 'btn-danger' : 'btn-outline-danger' ?> btn-sm" 
-                                            onclick="toggleFavorite(<?= $profile['id'] ?>)" 
-                                            data-profile-id="<?= $profile['id'] ?>">
+                                            onclick="toggleFavorite(<?= $profile['user_id'] ?>)" 
+                                            data-profile-id="<?= $profile['user_id'] ?>">
                                         <i class="bi bi-heart<?= isset($profile['is_favorite']) && $profile['is_favorite'] ? '-fill' : '' ?>"></i>
                                     </button>
                                     
                                     <?php if (!isset($profile['contact_status'])): ?>
-                                        <button class="btn btn-outline-primary btn-sm" onclick="sendContactRequest(<?= $profile['id'] ?>)">
+                                        <button class="btn btn-outline-primary btn-sm" onclick="sendContactRequest(<?= $profile['user_id'] ?>)">
                                             <i class="bi bi-envelope"></i>
                                         </button>
                                     <?php elseif ($profile['contact_status'] === 'pending'): ?>

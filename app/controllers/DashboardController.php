@@ -25,58 +25,35 @@ class DashboardController extends BaseController {
         }
         
         $profile = $this->profileModel->findByUserId($currentUser['id']);
-        
-        // Get dashboard statistics with error handling
-        try {
-            $contactStats = $this->contactModel->getRequestStats($currentUser['id']);
-        } catch (Exception $e) {
-            error_log("Error getting contact stats: " . $e->getMessage());
-            $contactStats = ['pending_received' => 0, 'pending_sent' => 0, 'accepted' => 0, 'rejected' => 0];
+        if (!$profile) {
+            $this->redirectWithMessage('/profile/edit', 'Please complete your profile first.', 'info');
         }
         
-        try {
-            $favoriteStats = $this->favoriteModel->getFavoriteStats($currentUser['id']);
-        } catch (Exception $e) {
-            error_log("Error getting favorite stats: " . $e->getMessage());
-            $favoriteStats = ['my_favorites' => 0, 'favorited_by' => 0];
-        }
+        // Get profile views
+        $profileViews = $this->profileModel->getProfileViews($currentUser['id'], 30);
         
-        // Get recent activities
-        $recentContactRequests = $this->contactModel->getReceivedRequests($currentUser['id'], 1, 5);
-        $recentFavorites = $this->favoriteModel->getRecentFavorites($currentUser['id'], 7);
-        
-        // Get profile views if profile exists
-        $profileViews = [];
-        if ($profile) {
-            $profileViews = $this->profileModel->getProfileViews($profile['id'], 30);
-        }
-        
-        // Check premium status
-        $premiumMembership = $this->premiumModel->getActiveMembership($currentUser['id']);
-        $premiumFeatures = $this->premiumModel->getUserFeatures($currentUser['id']);
+        // Get contact requests
+        $contactRequests = $this->contactModel->getReceivedRequests($currentUser['id'], 1, 5);
         
         // Get suggested matches
-        $suggestedMatches = [];
-        if ($profile) {
-            $suggestedMatches = $this->profileModel->getSimilarProfiles($profile['id'], 4);
-        }
+        $suggestedMatches = $this->profileModel->getSimilarProfiles($currentUser['id'], 4);
         
-        // Calculate profile completion
-        $profileCompletion = $profile['profile_completion'] ?? 0;
+        // Get recent visitors
+        $recentVisitors = $this->profileModel->getRecentVisitors($currentUser['id'], 5);
+        
+        // Get premium features
+        $features = $this->premiumModel->getUserFeatures($currentUser['id']);
         
         $data = [
             'title' => 'Dashboard - Sandawatha.lk',
-            'user' => $currentUser,
             'profile' => $profile,
-            'contact_stats' => $contactStats,
-            'favorite_stats' => $favoriteStats,
-            'recent_requests' => $recentContactRequests,
-            'recent_favorites' => $recentFavorites,
             'profile_views' => $profileViews,
-            'premium_membership' => $premiumMembership,
-            'premium_features' => $premiumFeatures,
+            'contact_requests' => $contactRequests,
             'suggested_matches' => $suggestedMatches,
-            'profile_completion' => $profileCompletion
+            'recent_visitors' => $recentVisitors,
+            'features' => $features,
+            'csrf_token' => $this->generateCsrf(),
+            'scripts' => ['dashboard']
         ];
         
         $this->layout('main', 'dashboard/index', $data);

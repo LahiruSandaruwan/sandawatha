@@ -93,6 +93,16 @@
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="feature-card text-center p-4 h-100">
+                    <div class="feature-icon bg-success text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <i class="bi bi-shield-check" style="font-size: 2rem;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Verified Profiles</h5>
+                    <p class="text-muted">All profiles are manually verified for authenticity. Connect with genuine people looking for serious relationships.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-card text-center p-4 h-100">
                     <div class="feature-icon bg-primary text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
                         <i class="bi bi-robot" style="font-size: 2rem;"></i>
                     </div>
@@ -108,46 +118,6 @@
                     </div>
                     <h5 class="fw-bold mb-3">Horoscope Matching</h5>
                     <p class="text-muted">Traditional horoscope compatibility analysis combined with modern matchmaking for the perfect balance.</p>
-                </div>
-            </div>
-            
-            <div class="col-md-4">
-                <div class="feature-card text-center p-4 h-100">
-                    <div class="feature-icon bg-success text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                        <i class="bi bi-shield-check" style="font-size: 2rem;"></i>
-                    </div>
-                    <h5 class="fw-bold mb-3">Verified Profiles</h5>
-                    <p class="text-muted">All profiles are manually verified for authenticity. Connect with genuine people looking for serious relationships.</p>
-                </div>
-            </div>
-            
-            <div class="col-md-4">
-                <div class="feature-card text-center p-4 h-100">
-                    <div class="feature-icon bg-info text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                        <i class="bi bi-camera-video" style="font-size: 2rem;"></i>
-                    </div>
-                    <h5 class="fw-bold mb-3">Video Introductions</h5>
-                    <p class="text-muted">Share video introductions and voice messages to make a great first impression and connect better.</p>
-                </div>
-            </div>
-            
-            <div class="col-md-4">
-                <div class="feature-card text-center p-4 h-100">
-                    <div class="feature-icon bg-danger text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                        <i class="bi bi-file-medical" style="font-size: 2rem;"></i>
-                    </div>
-                    <h5 class="fw-bold mb-3">Health Screening</h5>
-                    <p class="text-muted">Optional health report uploads with basic risk analysis for transparent health information sharing.</p>
-                </div>
-            </div>
-            
-            <div class="col-md-4">
-                <div class="feature-card text-center p-4 h-100">
-                    <div class="feature-icon bg-dark text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                        <i class="bi bi-chat-dots" style="font-size: 2rem;"></i>
-                    </div>
-                    <h5 class="fw-bold mb-3">Secure Messaging</h5>
-                    <p class="text-muted">Private and secure messaging system with read receipts and message management features.</p>
                 </div>
             </div>
         </div>
@@ -183,7 +153,7 @@
                             <p class="card-text"><?= htmlspecialchars(substr($profile['bio'] ?? 'No bio available.', 0, 100)) ?>...</p>
                         </div>
                         <div class="card-footer bg-transparent">
-                            <a href="<?= BASE_URL ?>/profile/<?= $profile['id'] ?>" class="btn btn-primary w-100">
+                            <a href="<?= BASE_URL ?>/profile/<?= $profile['user_id'] ?>" class="btn btn-primary w-100">
                                 <i class="bi bi-eye"></i> View Profile
                             </a>
                         </div>
@@ -255,7 +225,7 @@
                     <span class="fw-bold">2</span>
                 </div>
                 <h5 class="fw-bold mb-2">Complete Profile</h5>
-                <p class="text-muted">Add photos, videos, horoscope, and personal details</p>
+                <p class="text-muted">Add photos, horoscope, and personal details</p>
             </div>
             
             <div class="col-md-3 text-center">

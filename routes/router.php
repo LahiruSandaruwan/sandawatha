@@ -42,13 +42,12 @@ class Router {
         
         // Protected routes (require authentication)
         $this->addRoute('GET', '/dashboard', 'DashboardController', 'index', ['auth']);
+        $this->addRoute('GET', '/profile', 'ProfileController', 'index', ['auth']);
         $this->addRoute('GET', '/profile/edit', 'ProfileController', 'edit', ['auth']);
         $this->addRoute('POST', '/profile/update', 'ProfileController', 'update', ['auth']);
         $this->addRoute('POST', '/profile/upload-photo', 'ProfileController', 'uploadPhoto', ['auth']);
-        $this->addRoute('POST', '/profile/upload-video', 'ProfileController', 'uploadVideo', ['auth']);
-        $this->addRoute('POST', '/profile/upload-voice', 'ProfileController', 'uploadVoice', ['auth']);
         $this->addRoute('POST', '/profile/upload-horoscope', 'ProfileController', 'uploadHoroscope', ['auth']);
-        $this->addRoute('POST', '/profile/upload-health', 'ProfileController', 'uploadHealth', ['auth']);
+        $this->addRoute('POST', '/profile/search', 'ProfileController', 'search', ['auth']);
         
         // Contact requests
         $this->addRoute('POST', '/contact-request/send', 'ContactController', 'send', ['auth']);
@@ -127,7 +126,10 @@ class Router {
                 continue;
             }
             
-            $pattern = '#^' . $route['pattern'] . '$#';
+            // Convert named parameters to regex pattern
+            $pattern = preg_replace('/:[a-zA-Z]+/', '([^/]+)', $route['pattern']);
+            $pattern = '#^' . $pattern . '$#';
+            
             if (preg_match($pattern, $requestUri, $matches)) {
                 array_shift($matches); // Remove full match
                 

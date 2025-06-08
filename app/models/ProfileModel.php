@@ -10,8 +10,8 @@ class ProfileModel extends BaseModel {
             'religion', 'caste', 'district', 'city', 'marital_status', 'height_cm',
             'education', 'occupation', 'income_lkr', 'bio', 'goals',
             'wants_migration', 'career_focused', 'wants_early_marriage',
-            'profile_photo', 'video_intro', 'horoscope_file', 'health_report',
-            'voice_message', 'view_count', 'profile_completion',
+            'profile_photo', 'horoscope_file',
+            'view_count', 'profile_completion', 'privacy_settings',
             'created_at', 'updated_at'
         ];
     }
@@ -44,7 +44,7 @@ class ProfileModel extends BaseModel {
         return $this->execute($sql, $params);
     }
     
-    public function getProfileWithUser($profileId) {
+    public function getProfileWithUser($profileId, $viewerId = null) {
         try {
             $sql = "SELECT p.*, u.email, u.phone, u.status as user_status, u.created_at as member_since
                     FROM {$this->table} p
@@ -61,6 +61,74 @@ class ProfileModel extends BaseModel {
             if ($profile['user_status'] !== 'active') {
                 error_log("Profile {$profileId} found but user is not active. Status: {$profile['user_status']}");
                 return null;
+            }
+
+            // If viewer is the profile owner, return full profile
+            if ($viewerId && $viewerId == $profile['user_id']) {
+                return $profile;
+            }
+
+            // Check contact status if viewer is provided
+            $contactStatus = null;
+            if ($viewerId) {
+                require_once SITE_ROOT . '/app/models/ContactRequestModel.php';
+                $contactModel = new ContactRequestModel();
+                $contactRequest = $contactModel->getRequestBetweenUsers($viewerId, $profile['user_id']);
+                $contactStatus = $contactRequest['status'] ?? null;
+            }
+
+            // Apply privacy settings
+            $privacySettings = json_decode($profile['privacy_settings'], true) ?? [
+                'photo' => 'public',
+                'contact' => 'private',
+                'horoscope' => 'private',
+                'income' => 'private',
+                'bio' => 'public',
+                'education' => 'public',
+                'occupation' => 'public',
+                'goals' => 'private'
+            ];
+
+            // Fields that are always public
+            $publicFields = [
+                'id', 'user_id', 'first_name', 'last_name', 'gender',
+                'religion', 'district', 'marital_status', 'height_cm',
+                'view_count', 'profile_completion', 'created_at', 'updated_at'
+            ];
+
+            // Fields that require contact acceptance
+            $privateFields = [
+                'email', 'phone', 'caste', 'city', 'income_lkr',
+                'wants_migration', 'career_focused', 'wants_early_marriage',
+                'horoscope_file'
+            ];
+
+            // Process each field based on privacy settings
+            foreach ($profile as $field => $value) {
+                // Skip public fields
+                if (in_array($field, $publicFields)) {
+                    continue;
+                }
+
+                // Process private fields
+                if (in_array($field, $privateFields)) {
+                    if ($contactStatus !== 'accepted') {
+                        unset($profile[$field]);
+                        continue;
+                    }
+                }
+
+                // Process configurable fields
+                if (isset($privacySettings[$field])) {
+                    if ($privacySettings[$field] === 'private' && $contactStatus !== 'accepted') {
+                        unset($profile[$field]);
+                    }
+                }
+            }
+
+            // Special handling for profile photo
+            if ($privacySettings['photo'] === 'private' && $contactStatus !== 'accepted') {
+                $profile['profile_photo'] = null;
             }
             
             return $profile;
@@ -211,14 +279,18 @@ class ProfileModel extends BaseModel {
         return $this->fetchAll($sql, [':limit' => $limit]);
     }
     
-    public function incrementViewCount($profileId, $viewerId) {
+    public function incrementViewCount($userId, $viewerId) {
+        // Get the profile ID from the user ID
+        $profile = $this->findByUserId($userId);
+        if (!$profile) return false;
+        
         // First, check if this viewer has already viewed this profile today
         $sql = "SELECT id FROM profile_views 
                 WHERE viewer_id = :viewer_id AND viewed_profile_id = :profile_id AND view_date = CURDATE()";
         
         $existing = $this->fetchOne($sql, [
             ':viewer_id' => $viewerId,
-            ':profile_id' => $profileId
+            ':profile_id' => $profile['id']
         ]);
         
         if ($existing) {
@@ -233,7 +305,7 @@ class ProfileModel extends BaseModel {
                     VALUES (:viewer_id, :profile_id, CURDATE(), 1)";
             $this->execute($sql, [
                 ':viewer_id' => $viewerId,
-                ':profile_id' => $profileId
+                ':profile_id' => $profile['id']
             ]);
         }
         
@@ -246,10 +318,13 @@ class ProfileModel extends BaseModel {
                 )
                 WHERE id = :profile_id";
         
-        return $this->execute($sql, [':profile_id' => $profileId]);
+        return $this->execute($sql, [':profile_id' => $profile['id']]);
     }
     
-    public function getProfileViews($profileId, $days = 30) {
+    public function getProfileViews($userId, $days = 30) {
+        $profile = $this->findByUserId($userId);
+        if (!$profile) return [];
+        
         $sql = "SELECT DATE(pv.view_date) as date, SUM(pv.view_count) as views,
                        COUNT(DISTINCT pv.viewer_id) as unique_viewers
                 FROM profile_views pv
@@ -259,7 +334,7 @@ class ProfileModel extends BaseModel {
                 ORDER BY date DESC";
         
         return $this->fetchAll($sql, [
-            ':profile_id' => $profileId,
+            ':profile_id' => $profile['id'],
             ':days' => $days
         ]);
     }
@@ -275,7 +350,7 @@ class ProfileModel extends BaseModel {
         
         $optionalFields = [
             'caste', 'income_lkr', 'profile_photo', 'horoscope_file',
-            'video_intro', 'voice_message', 'goals'
+            'goals'
         ];
         
         $completedRequired = 0;
@@ -305,7 +380,7 @@ class ProfileModel extends BaseModel {
         $profile = $this->find($profileId);
         if (!$profile) return [];
         
-        $sql = "SELECT p.*, u.status as user_status,
+        $sql = "SELECT p.*, u.status as user_status, u.id as user_id,
                        TIMESTAMPDIFF(YEAR, p.date_of_birth, CURDATE()) as age,
                        (
                            CASE WHEN p.religion = :religion THEN 2 ELSE 0 END +

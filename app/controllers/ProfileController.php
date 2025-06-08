@@ -44,20 +44,104 @@ class ProfileController extends BaseController {
         $this->layout('main', 'profiles/browse', $data);
     }
     
-    public function viewProfile($profileId) {
+    public function viewProfile($userId) {
         try {
-            $profile = $this->profileModel->getProfileWithUser($profileId);
+            $currentUserId = $_SESSION['user_id'] ?? null;
+            $profile = $this->profileModel->findByUserId($userId);
             
             if (!$profile) {
                 $this->redirectWithMessage('/', 'Profile not found or is not accessible.', 'error');
                 return;
             }
             
+            // Get user details
+            require_once SITE_ROOT . '/app/models/UserModel.php';
+            $userModel = new UserModel();
+            $user = $userModel->find($userId);
+            
+            if (!$user || $user['status'] !== 'active') {
+                $this->redirectWithMessage('/', 'Profile not found or is not accessible.', 'error');
+                return;
+            }
+            
+            // Merge user details with profile
+            $profile['email'] = $user['email'];
+            $profile['phone'] = $user['phone'];
+            $profile['user_status'] = $user['status'];
+            $profile['member_since'] = $user['created_at'];
+            
+            // If viewer is the profile owner, return full profile
+            if ($currentUserId && $currentUserId == $userId) {
+                // Skip privacy checks for own profile
+            } else {
+                // Apply privacy settings
+                $privacySettings = json_decode($profile['privacy_settings'], true) ?? [
+                    'photo' => 'public',
+                    'contact' => 'private',
+                    'horoscope' => 'private',
+                    'income' => 'private',
+                    'bio' => 'public',
+                    'education' => 'public',
+                    'occupation' => 'public',
+                    'goals' => 'private'
+                ];
+
+                // Fields that are always public
+                $publicFields = [
+                    'id', 'user_id', 'first_name', 'last_name', 'gender',
+                    'religion', 'district', 'marital_status', 'height_cm',
+                    'view_count', 'profile_completion', 'created_at', 'updated_at'
+                ];
+
+                // Fields that require contact acceptance
+                $privateFields = [
+                    'email', 'phone', 'caste', 'city', 'income_lkr',
+                    'wants_migration', 'career_focused', 'wants_early_marriage',
+                    'horoscope_file'
+                ];
+
+                // Get contact status
+                $contactStatus = null;
+                if ($currentUserId) {
+                    require_once SITE_ROOT . '/app/models/ContactRequestModel.php';
+                    $contactModel = new ContactRequestModel();
+                    $contactRequest = $contactModel->getRequestBetweenUsers($currentUserId, $userId);
+                    $contactStatus = $contactRequest['status'] ?? null;
+                }
+
+                // Process each field based on privacy settings
+                foreach ($profile as $field => $value) {
+                    // Skip public fields
+                    if (in_array($field, $publicFields)) {
+                        continue;
+                    }
+
+                    // Process private fields
+                    if (in_array($field, $privateFields)) {
+                        if ($contactStatus !== 'accepted') {
+                            unset($profile[$field]);
+                            continue;
+                        }
+                    }
+
+                    // Process configurable fields
+                    if (isset($privacySettings[$field])) {
+                        if ($privacySettings[$field] === 'private' && $contactStatus !== 'accepted') {
+                            unset($profile[$field]);
+                        }
+                    }
+                }
+
+                // Special handling for profile photo
+                if ($privacySettings['photo'] === 'private' && $contactStatus !== 'accepted') {
+                    $profile['profile_photo'] = null;
+                }
+            }
+            
             // Increment view count if user is logged in and viewing someone else's profile
-            $currentUserId = $_SESSION['user_id'] ?? null;
-            if ($currentUserId && $currentUserId != $profile['user_id']) {
+            if ($currentUserId && $currentUserId != $userId) {
                 try {
-                    $this->profileModel->incrementViewCount($profileId, $currentUserId);
+                    $this->profileModel->incrementViewCount($userId, $currentUserId);
                 } catch (Exception $e) {
                     error_log("Error incrementing view count: " . $e->getMessage());
                     // Continue execution even if view count fails
@@ -66,7 +150,7 @@ class ProfileController extends BaseController {
             
             // Get similar profiles
             try {
-                $similarProfiles = $this->profileModel->getSimilarProfiles($profileId, 6);
+                $similarProfiles = $this->profileModel->getSimilarProfiles($userId, 6);
             } catch (Exception $e) {
                 error_log("Error getting similar profiles: " . $e->getMessage());
                 $similarProfiles = [];
@@ -75,26 +159,13 @@ class ProfileController extends BaseController {
             // Calculate age
             $profile['age'] = $this->calculateAge($profile['date_of_birth']);
             
-            // Check if current user has already sent contact request
-            $contactStatus = null;
-            if ($currentUserId) {
-                try {
-                    require_once SITE_ROOT . '/app/models/ContactRequestModel.php';
-                    $contactModel = new ContactRequestModel();
-                    $contactRequest = $contactModel->getRequestBetweenUsers($currentUserId, $profile['user_id']);
-                    $contactStatus = $contactRequest['status'] ?? null;
-                } catch (Exception $e) {
-                    error_log("Error checking contact status: " . $e->getMessage());
-                }
-            }
-            
             // Check if profile is in favorites
             $isFavorite = false;
             if ($currentUserId) {
                 try {
                     require_once SITE_ROOT . '/app/models/FavoriteModel.php';
                     $favoriteModel = new FavoriteModel();
-                    $isFavorite = $favoriteModel->isFavorite($currentUserId, $profile['user_id']);
+                    $isFavorite = $favoriteModel->isFavorite($currentUserId, $userId);
                 } catch (Exception $e) {
                     error_log("Error checking favorite status: " . $e->getMessage());
                 }
@@ -104,7 +175,7 @@ class ProfileController extends BaseController {
                 'title' => $profile['first_name'] . ' ' . $profile['last_name'] . ' - Profile',
                 'profile' => $profile,
                 'similar_profiles' => $similarProfiles,
-                'contact_status' => $contactStatus,
+                'contact_status' => $contactStatus ?? null,
                 'is_favorite' => $isFavorite,
                 'csrf_token' => $this->generateCsrf(),
                 'scripts' => ['profile-view']
@@ -152,6 +223,20 @@ class ProfileController extends BaseController {
         }
         
         $data = $this->sanitizeInput($_POST);
+        
+        // Handle privacy settings
+        if (isset($data['privacy_settings']) && is_array($data['privacy_settings'])) {
+            $privacySettings = [];
+            $allowedValues = ['public', 'private'];
+            $allowedFields = ['photo', 'contact', 'horoscope', 'income', 'bio', 'education', 'occupation', 'goals'];
+            
+            foreach ($allowedFields as $field) {
+                $value = $data['privacy_settings'][$field] ?? 'private';
+                $privacySettings[$field] = in_array($value, $allowedValues) ? $value : 'private';
+            }
+            
+            $data['privacy_settings'] = json_encode($privacySettings);
+        }
         
         // Decode HTML entities for education field
         if (isset($data['education'])) {
@@ -248,82 +333,6 @@ class ProfileController extends BaseController {
             $this->json([
                 'success' => true,
                 'message' => 'Photo uploaded successfully',
-                'filename' => $filename,
-                'url' => UPLOAD_URL . $filename
-            ]);
-        } catch (Exception $e) {
-            $this->json(['success' => false, 'message' => $e->getMessage()], 400);
-        }
-    }
-    
-    public function uploadVideo() {
-        if (!$this->validateCsrf()) {
-            $this->json(['success' => false, 'message' => 'Invalid security token'], 400);
-        }
-        
-        $currentUser = $this->getCurrentUser();
-        if (!$currentUser) {
-            $this->json(['success' => false, 'message' => 'Not authenticated'], 401);
-        }
-        
-        try {
-            $filename = $this->uploadFile(
-                $_FILES['video'],
-                'videos',
-                ALLOWED_VIDEO_TYPES,
-                MAX_VIDEO_SIZE
-            );
-            
-            // Delete old video if exists
-            $profile = $this->profileModel->findByUserId($currentUser['id']);
-            if ($profile && $profile['video_intro']) {
-                $this->deleteFile($profile['video_intro']);
-            }
-            
-            // Update profile with new video
-            $this->profileModel->updateProfile($currentUser['id'], ['video_intro' => $filename]);
-            
-            $this->json([
-                'success' => true,
-                'message' => 'Video uploaded successfully',
-                'filename' => $filename,
-                'url' => UPLOAD_URL . $filename
-            ]);
-        } catch (Exception $e) {
-            $this->json(['success' => false, 'message' => $e->getMessage()], 400);
-        }
-    }
-    
-    public function uploadVoice() {
-        if (!$this->validateCsrf()) {
-            $this->json(['success' => false, 'message' => 'Invalid security token'], 400);
-        }
-        
-        $currentUser = $this->getCurrentUser();
-        if (!$currentUser) {
-            $this->json(['success' => false, 'message' => 'Not authenticated'], 401);
-        }
-        
-        try {
-            $filename = $this->uploadFile(
-                $_FILES['voice'],
-                'voice',
-                ALLOWED_AUDIO_TYPES,
-                MAX_VOICE_SIZE
-            );
-            
-            // Delete old voice message if exists
-            $profile = $this->profileModel->findByUserId($currentUser['id']);
-            if ($profile && $profile['voice_message']) {
-                $this->deleteFile($profile['voice_message']);
-            }
-            
-            // Update profile with new voice message
-            $this->profileModel->updateProfile($currentUser['id'], ['voice_message' => $filename]);
-            
-            $this->json([
-                'success' => true,
-                'message' => 'Voice message uploaded successfully',
                 'filename' => $filename,
                 'url' => UPLOAD_URL . $filename
             ]);
@@ -472,20 +481,22 @@ class ProfileController extends BaseController {
     }
     
     private function getReligions() {
-        return ['Buddhist', 'Hindu', 'Christian', 'Muslim', 'Other'];
+        return [
+            'Buddhist', 'Hindu', 'Muslim', 'Christian', 'Roman Catholic', 'Other'
+        ];
     }
     
     private function getCastes() {
         return [
-            'Govigama', 'Karawa', 'Salagama', 'Durawa', 'Wahumpura', 'Chandrasena',
-            'Kotha', 'Marakkala', 'Navandanna', 'Padua', 'Wahumpura', 'Other'
+            'Govigama', 'Karava', 'Salagama', 'Durava', 'Wahumpura',
+            'Bathgama', 'Deva', 'Rada', 'Other', 'Prefer not to say'
         ];
     }
     
     private function getEducationLevels() {
         return [
             'O/L', 'A/L', 'Diploma', 'Bachelor\'s Degree', 'Master\'s Degree',
-            'PhD', 'Professional Qualification', 'Other'
+            'PhD/Doctorate', 'Professional Qualification', 'Other'
         ];
     }
 }

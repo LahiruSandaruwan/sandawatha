@@ -1,0 +1,22 @@
+-- Migration: Update user_profiles table structure
+-- Description: Add missing columns to user_profiles table
+-- Version: 005
+-- Created: 2024-03-14
+
+-- Add missing columns
+ALTER TABLE user_profiles
+ADD COLUMN IF NOT EXISTS marital_status ENUM('single', 'divorced', 'widowed') NOT NULL DEFAULT 'single',
+ADD COLUMN IF NOT EXISTS height_cm INT,
+ADD COLUMN IF NOT EXISTS occupation VARCHAR(100),
+ADD COLUMN IF NOT EXISTS income_lkr DECIMAL(12,2),
+ADD COLUMN IF NOT EXISTS goals TEXT,
+ADD COLUMN IF NOT EXISTS wants_migration BOOLEAN DEFAULT 0,
+ADD COLUMN IF NOT EXISTS career_focused BOOLEAN DEFAULT 0,
+ADD COLUMN IF NOT EXISTS wants_early_marriage BOOLEAN DEFAULT 0,
+ADD COLUMN IF NOT EXISTS profile_photo VARCHAR(255),
+ADD COLUMN IF NOT EXISTS horoscope_file VARCHAR(255),
+ADD COLUMN IF NOT EXISTS health_report VARCHAR(255),
+ADD COLUMN IF NOT EXISTS view_count INT DEFAULT 0,
+ADD COLUMN IF NOT EXISTS profile_completion INT DEFAULT 0,
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP; 

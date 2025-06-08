@@ -22,19 +22,11 @@ class FavoriteController extends BaseController {
             $this->json(['success' => false, 'message' => 'Not authenticated'], 401);
         }
         
-        $profileId = $_POST['profile_id'] ?? '';
+        $favoriteUserId = $_POST['profile_id'] ?? '';
         
-        if (empty($profileId)) {
+        if (empty($favoriteUserId)) {
             $this->json(['success' => false, 'message' => 'Profile ID is required'], 400);
         }
-        
-        // Get the profile to find user ID
-        $profile = $this->profileModel->find($profileId);
-        if (!$profile) {
-            $this->json(['success' => false, 'message' => 'Profile not found'], 404);
-        }
-        
-        $favoriteUserId = $profile['user_id'];
         
         // Check if user is trying to favorite themselves
         if ($currentUser['id'] == $favoriteUserId) {
@@ -45,7 +37,7 @@ class FavoriteController extends BaseController {
             $favoriteId = $this->favoriteModel->addFavorite($currentUser['id'], $favoriteUserId);
             
             // Log activity
-            $this->logUserActivity($currentUser['id'], 'profile_favorited', "Added profile ID: {$profileId} to favorites");
+            $this->logUserActivity($currentUser['id'], 'profile_favorited', "Added user ID: {$favoriteUserId} to favorites");
             
             $this->json([
                 'success' => true,
@@ -67,26 +59,18 @@ class FavoriteController extends BaseController {
             $this->json(['success' => false, 'message' => 'Not authenticated'], 401);
         }
         
-        $profileId = $_POST['profile_id'] ?? '';
+        $favoriteUserId = $_POST['profile_id'] ?? '';
         
-        if (empty($profileId)) {
+        if (empty($favoriteUserId)) {
             $this->json(['success' => false, 'message' => 'Profile ID is required'], 400);
         }
-        
-        // Get the profile to find user ID
-        $profile = $this->profileModel->find($profileId);
-        if (!$profile) {
-            $this->json(['success' => false, 'message' => 'Profile not found'], 404);
-        }
-        
-        $favoriteUserId = $profile['user_id'];
         
         try {
             $success = $this->favoriteModel->removeFavorite($currentUser['id'], $favoriteUserId);
             
             if ($success) {
                 // Log activity
-                $this->logUserActivity($currentUser['id'], 'profile_unfavorited', "Removed profile ID: {$profileId} from favorites");
+                $this->logUserActivity($currentUser['id'], 'profile_unfavorited', "Removed user ID: {$favoriteUserId} from favorites");
                 
                 $this->json([
                     'success' => true,
