@@ -1,0 +1,268 @@
+<?php
+require_once 'BaseController.php';
+require_once SITE_ROOT . '/app/models/MessageModel.php';
+require_once SITE_ROOT . '/app/models/PremiumModel.php';
+
+class MessageController extends BaseController {
+    private $messageModel;
+    private $premiumModel;
+    
+    public function __construct() {
+        $this->messageModel = new MessageModel();
+        $this->premiumModel = new PremiumModel();
+    }
+    
+    public function inbox() {
+        $currentUser = $this->getCurrentUser();
+        if (!$currentUser) {
+            $this->redirect('/login');
+        }
+        
+        $tab = $_GET['tab'] ?? 'inbox';
+        $page = $_GET['page'] ?? 1;
+        $search = $_GET['search'] ?? '';
+        
+        $messages = [];
+        $sentMessages = [];
+        $adminMessages = [];
+        $conversations = [];
+        
+        if ($tab === 'inbox') {
+            if ($search) {
+                $messages = $this->messageModel->searchMessages($currentUser['id'], $search, $page, 20);
+            } else {
+                $messages = $this->messageModel->getInbox($currentUser['id'], $page, 20);
+            }
+        } elseif ($tab === 'sent') {
+            $sentMessages = $this->messageModel->getSentMessages($currentUser['id'], $page, 20);
+        } elseif ($tab === 'admin') {
+            $adminMessages = $this->messageModel->getAdminMessages($currentUser['id'], $page, 20);
+        } elseif ($tab === 'conversations') {
+            $conversations = $this->messageModel->getRecentConversations($currentUser['id'], 20);
+        }
+        
+        $stats = $this->messageModel->getMessageStats($currentUser['id']);
+        $unreadCount = $this->messageModel->getUnreadCount($currentUser['id']);
+        
+        $data = [
+            'title' => 'Messages - Sandawatha.lk',
+            'messages' => $messages,
+            'sent_messages' => $sentMessages,
+            'admin_messages' => $adminMessages,
+            'conversations' => $conversations,
+            'stats' => $stats,
+            'unread_count' => $unreadCount,
+            'current_tab' => $tab,
+            'current_page' => $page,
+            'search_query' => $search,
+            'csrf_token' => $this->generateCsrf(),
+            'scripts' => ['messages']
+        ];
+        
+        $this->layout('main', 'messages/inbox', $data);
+    }
+    
+    public function viewMessage($messageId) {
+        $currentUser = $this->getCurrentUser();
+        if (!$currentUser) {
+            $this->redirect('/login');
+        }
+        
+        $conversation = $this->messageModel->getConversation($messageId, $currentUser['id']);
+        
+        if (!$conversation) {
+            $this->redirectWithMessage('/messages', 'Message not found or access denied.', 'error');
+        }
+        
+        $mainMessage = $conversation[0];
+        
+        $data = [
+            'title' => 'Message: ' . htmlspecialchars($mainMessage['subject']) . ' - Sandawatha.lk',
+            'conversation' => $conversation,
+            'main_message' => $mainMessage,
+            'current_user_id' => $currentUser['id'],
+            'csrf_token' => $this->generateCsrf(),
+            'scripts' => ['message-view']
+        ];
+        
+        $this->layout('main', 'messages/view', $data);
+    }
+    
+    public function send() {
+        if (!$this->validateCsrf()) {
+            $this->json(['success' => false, 'message' => 'Invalid security token'], 400);
+        }
+        
+        $currentUser = $this->getCurrentUser();
+        if (!$currentUser) {
+            $this->json(['success' => false, 'message' => 'Not authenticated'], 401);
+        }
+        
+        $receiverId = $_POST['receiver_id'] ?? '';
+        $subject = $this->sanitizeInput($_POST['subject'] ?? '');
+        $message = $this->sanitizeInput($_POST['message'] ?? '');
+        
+        if (empty($receiverId) || empty($subject) || empty($message)) {
+            $this->json(['success' => false, 'message' => 'All fields are required'], 400);
+        }
+        
+        // Check if user is trying to message themselves
+        if ($currentUser['id'] == $receiverId) {
+            $this->json(['success' => false, 'message' => 'Cannot send message to yourself'], 400);
+        }
+        
+        // Check daily limit based on premium status
+        $features = $this->premiumModel->getUserFeatures($currentUser['id']);
+        $dailyLimit = $features['message_limit_per_day'];
+        
+        if ($dailyLimit !== 'unlimited') {
+            if (!$this->messageModel->checkDailyLimit($currentUser['id'], $dailyLimit)) {
+                $this->json(['success' => false, 'message' => 'Daily message limit reached. Upgrade to premium for unlimited messaging.'], 429);
+            }
+        }
+        
+        try {
+            $messageId = $this->messageModel->sendMessage(
+                $currentUser['id'],
+                $receiverId,
+                $subject,
+                $message
+            );
+            
+            // Log activity
+            $this->logUserActivity($currentUser['id'], 'message_sent', "Sent message to user ID: {$receiverId}");
+            
+            $this->json([
+                'success' => true,
+                'message' => 'Message sent successfully!',
+                'message_id' => $messageId
+            ]);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    
+    public function reply() {
+        if (!$this->validateCsrf()) {
+            $this->json(['success' => false, 'message' => 'Invalid security token'], 400);
+        }
+        
+        $currentUser = $this->getCurrentUser();
+        if (!$currentUser) {
+            $this->json(['success' => false, 'message' => 'Not authenticated'], 401);
+        }
+        
+        $parentMessageId = $_POST['parent_message_id'] ?? '';
+        $message = $this->sanitizeInput($_POST['message'] ?? '');
+        
+        if (empty($parentMessageId) || empty($message)) {
+            $this->json(['success' => false, 'message' => 'Parent message ID and message are required'], 400);
+        }
+        
+        // Get parent message to determine receiver
+        $parentMessage = $this->messageModel->getMessageWithParticipants($parentMessageId);
+        if (!$parentMessage) {
+            $this->json(['success' => false, 'message' => 'Parent message not found'], 404);
+        }
+        
+        // Determine receiver (the other participant)
+        $receiverId = ($parentMessage['sender_id'] == $currentUser['id']) ? 
+                     $parentMessage['receiver_id'] : $parentMessage['sender_id'];
+        
+        // Check daily limit
+        $features = $this->premiumModel->getUserFeatures($currentUser['id']);
+        $dailyLimit = $features['message_limit_per_day'];
+        
+        if ($dailyLimit !== 'unlimited') {
+            if (!$this->messageModel->checkDailyLimit($currentUser['id'], $dailyLimit)) {
+                $this->json(['success' => false, 'message' => 'Daily message limit reached. Upgrade to premium for unlimited messaging.'], 429);
+            }
+        }
+        
+        try {
+            $messageId = $this->messageModel->sendMessage(
+                $currentUser['id'],
+                $receiverId,
+                'Re: ' . $parentMessage['subject'],
+                $message,
+                false,
+                $parentMessageId
+            );
+            
+            // Log activity
+            $this->logUserActivity($currentUser['id'], 'message_replied', "Replied to message ID: {$parentMessageId}");
+            
+            $this->json([
+                'success' => true,
+                'message' => 'Reply sent successfully!',
+                'message_id' => $messageId
+            ]);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    
+    public function delete() {
+        if (!$this->validateCsrf()) {
+            $this->json(['success' => false, 'message' => 'Invalid security token'], 400);
+        }
+        
+        $currentUser = $this->getCurrentUser();
+        if (!$currentUser) {
+            $this->json(['success' => false, 'message' => 'Not authenticated'], 401);
+        }
+        
+        $messageId = $_POST['message_id'] ?? '';
+        
+        if (empty($messageId)) {
+            $this->json(['success' => false, 'message' => 'Message ID is required'], 400);
+        }
+        
+        try {
+            $success = $this->messageModel->deleteMessage($messageId, $currentUser['id']);
+            
+            if ($success) {
+                // Log activity
+                $this->logUserActivity($currentUser['id'], 'message_deleted', "Deleted message ID: {$messageId}");
+                
+                $this->json([
+                    'success' => true,
+                    'message' => 'Message deleted successfully!'
+                ]);
+            } else {
+                $this->json(['success' => false, 'message' => 'Message not found or access denied'], 404);
+            }
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    
+    public function markAsRead() {
+        if (!$this->validateCsrf()) {
+            $this->json(['success' => false, 'message' => 'Invalid security token'], 400);
+        }
+        
+        $currentUser = $this->getCurrentUser();
+        if (!$currentUser) {
+            $this->json(['success' => false, 'message' => 'Not authenticated'], 401);
+        }
+        
+        $messageId = $_POST['message_id'] ?? '';
+        
+        if (empty($messageId)) {
+            $this->json(['success' => false, 'message' => 'Message ID is required'], 400);
+        }
+        
+        try {
+            $success = $this->messageModel->markAsRead($messageId, $currentUser['id']);
+            
+            $this->json([
+                'success' => true,
+                'message' => 'Message marked as read'
+            ]);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+}
+?>

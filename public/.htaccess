@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# If your project lives at http://localhost/sandawatha/, set RewriteBase accordingly:
+RewriteBase /sandawatha/
+
+# If the requested resource is a real file or directory, serve it directly
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Otherwise, send everything to public/index.php
+RewriteRule ^ index.php [L]
