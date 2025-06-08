@@ -116,25 +116,21 @@ html {
 }
 
 .couple-icon-large {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 160px;
-    height: 160px;
+    width: 240px;
+    height: 240px;
     margin: 0 auto;
-    position: relative;
+    overflow: hidden;
 }
 
 .couple-img {
-    width: 160px;
-    height: 160px;
-    transition: all 0.5s ease;
-    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
 }
 
 .testimonial-card:hover .couple-img {
-    transform: scale(1.1);
-    filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.15));
+    transform: scale(1.05);
 }
 
 .couple-primary {
@@ -623,6 +619,113 @@ html {
     color: #e0e0e0;
 }
 
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+    background-color: #2d3748;
+    border-color: #4a5568;
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus {
+    background-color: #2d3748;
+    border-color: var(--primary-color);
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .input-group-text {
+    background-color: #2d3748;
+    border-color: #4a5568;
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .dropdown-menu {
+    background-color: #1e1e1e;
+    border-color: #333;
+}
+
+[data-bs-theme="dark"] .dropdown-item {
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .dropdown-item:hover {
+    background-color: #2d3748;
+    color: #fff;
+}
+
+[data-bs-theme="dark"] .modal-content {
+    background-color: #1e1e1e;
+    border-color: #333;
+}
+
+[data-bs-theme="dark"] .modal-header,
+[data-bs-theme="dark"] .modal-footer {
+    border-color: #333;
+}
+
+[data-bs-theme="dark"] .close {
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .table {
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .table td,
+[data-bs-theme="dark"] .table th {
+    border-color: #333;
+}
+
+[data-bs-theme="dark"] .chat-message.received {
+    background-color: #2d3748;
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .message-item {
+    border-color: #333;
+}
+
+[data-bs-theme="dark"] .message-item:hover {
+    background-color: #2d3748;
+}
+
+[data-bs-theme="dark"] .stat-card {
+    background-color: #1e1e1e;
+    border-color: #333;
+}
+
+[data-bs-theme="dark"] .premium-plan {
+    background-color: #1e1e1e;
+    border-color: #333;
+}
+
+[data-bs-theme="dark"] .premium-badge {
+    background: linear-gradient(45deg, #b8860b, #daa520);
+    color: #fff;
+}
+
+[data-bs-theme="dark"] .alert {
+    background-color: #2d3748;
+    border-color: #4a5568;
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .text-muted {
+    color: #a0aec0 !important;
+}
+
+[data-bs-theme="dark"] ::-webkit-scrollbar-track {
+    background: #2d3748;
+}
+
+[data-bs-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: #4a5568;
+}
+
+[data-bs-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: #718096;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .container {
@@ -764,4 +867,71 @@ button:focus, .btn:focus {
 .hero-content {
     position: relative;
     z-index: 2;
+}
+
+/* How It Works Section */
+.how-it-works-section {
+    background: var(--light-color);
+    transition: background-color 0.3s ease;
+}
+
+.step-number {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+/* Success Stories Section */
+.testimonial-card {
+    background: white;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow);
+}
+
+.couple-icon-large {
+    width: 240px;
+    height: 240px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.couple-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Dark mode specific styles for How It Works and Success Stories sections */
+[data-bs-theme="dark"] .how-it-works-section {
+    background-color: #1e1e1e;
+}
+
+[data-bs-theme="dark"] .step-number {
+    background-color: #2d3748;
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .testimonial-card {
+    background-color: #2d3748;
+    border: 1px solid #4a5568;
+}
+
+[data-bs-theme="dark"] .testimonial-card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+[data-bs-theme="dark"] .bg-light {
+    background-color: #1e1e1e !important;
 }

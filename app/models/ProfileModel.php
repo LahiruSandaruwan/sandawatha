@@ -45,12 +45,29 @@ class ProfileModel extends BaseModel {
     }
     
     public function getProfileWithUser($profileId) {
-        $sql = "SELECT p.*, u.email, u.phone, u.status as user_status, u.created_at as member_since
-                FROM {$this->table} p
-                LEFT JOIN users u ON p.user_id = u.id
-                WHERE p.id = :profile_id AND u.status = 'active'";
-        
-        return $this->fetchOne($sql, [':profile_id' => $profileId]);
+        try {
+            $sql = "SELECT p.*, u.email, u.phone, u.status as user_status, u.created_at as member_since
+                    FROM {$this->table} p
+                    LEFT JOIN users u ON p.user_id = u.id
+                    WHERE p.id = :profile_id";
+            
+            $profile = $this->fetchOne($sql, [':profile_id' => $profileId]);
+            
+            if (!$profile) {
+                error_log("Profile not found: {$profileId}");
+                return null;
+            }
+            
+            if ($profile['user_status'] !== 'active') {
+                error_log("Profile {$profileId} found but user is not active. Status: {$profile['user_status']}");
+                return null;
+            }
+            
+            return $profile;
+        } catch (Exception $e) {
+            error_log("Error fetching profile {$profileId}: " . $e->getMessage());
+            throw $e;
+        }
     }
     
     public function searchProfiles($filters = [], $currentUserId = null, $page = 1, $limit = 20) {

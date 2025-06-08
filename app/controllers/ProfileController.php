@@ -45,52 +45,77 @@ class ProfileController extends BaseController {
     }
     
     public function viewProfile($profileId) {
-        $profile = $this->profileModel->getProfileWithUser($profileId);
-        
-        if (!$profile) {
-            $this->redirectWithMessage('/', 'Profile not found.', 'error');
+        try {
+            $profile = $this->profileModel->getProfileWithUser($profileId);
+            
+            if (!$profile) {
+                $this->redirectWithMessage('/', 'Profile not found or is not accessible.', 'error');
+                return;
+            }
+            
+            // Increment view count if user is logged in and viewing someone else's profile
+            $currentUserId = $_SESSION['user_id'] ?? null;
+            if ($currentUserId && $currentUserId != $profile['user_id']) {
+                try {
+                    $this->profileModel->incrementViewCount($profileId, $currentUserId);
+                } catch (Exception $e) {
+                    error_log("Error incrementing view count: " . $e->getMessage());
+                    // Continue execution even if view count fails
+                }
+            }
+            
+            // Get similar profiles
+            try {
+                $similarProfiles = $this->profileModel->getSimilarProfiles($profileId, 6);
+            } catch (Exception $e) {
+                error_log("Error getting similar profiles: " . $e->getMessage());
+                $similarProfiles = [];
+            }
+            
+            // Calculate age
+            $profile['age'] = $this->calculateAge($profile['date_of_birth']);
+            
+            // Check if current user has already sent contact request
+            $contactStatus = null;
+            if ($currentUserId) {
+                try {
+                    require_once SITE_ROOT . '/app/models/ContactRequestModel.php';
+                    $contactModel = new ContactRequestModel();
+                    $contactRequest = $contactModel->getRequestBetweenUsers($currentUserId, $profile['user_id']);
+                    $contactStatus = $contactRequest['status'] ?? null;
+                } catch (Exception $e) {
+                    error_log("Error checking contact status: " . $e->getMessage());
+                }
+            }
+            
+            // Check if profile is in favorites
+            $isFavorite = false;
+            if ($currentUserId) {
+                try {
+                    require_once SITE_ROOT . '/app/models/FavoriteModel.php';
+                    $favoriteModel = new FavoriteModel();
+                    $isFavorite = $favoriteModel->isFavorite($currentUserId, $profile['user_id']);
+                } catch (Exception $e) {
+                    error_log("Error checking favorite status: " . $e->getMessage());
+                }
+            }
+            
+            $data = [
+                'title' => $profile['first_name'] . ' ' . $profile['last_name'] . ' - Profile',
+                'profile' => $profile,
+                'similar_profiles' => $similarProfiles,
+                'contact_status' => $contactStatus,
+                'is_favorite' => $isFavorite,
+                'csrf_token' => $this->generateCsrf(),
+                'scripts' => ['profile-view']
+            ];
+            
+            $this->layout('main', 'profiles/view', $data);
+            
+        } catch (Exception $e) {
+            error_log("Error in viewProfile: " . $e->getMessage());
+            $this->redirectWithMessage('/', 'An error occurred while loading the profile. Please try again later.', 'error');
         }
-        
-        // Increment view count if user is logged in and viewing someone else's profile
-        $currentUserId = $_SESSION['user_id'] ?? null;
-        if ($currentUserId && $currentUserId != $profile['user_id']) {
-            $this->profileModel->incrementViewCount($profileId, $currentUserId);
-        }
-        
-        // Get similar profiles
-        $similarProfiles = $this->profileModel->getSimilarProfiles($profileId, 6);
-        
-        // Calculate age
-        $profile['age'] = $this->calculateAge($profile['date_of_birth']);
-        
-        // Check if current user has already sent contact request
-        $contactStatus = null;
-        if ($currentUserId) {
-            require_once SITE_ROOT . '/app/models/ContactRequestModel.php';
-            $contactModel = new ContactRequestModel();
-            $contactRequest = $contactModel->getRequestBetweenUsers($currentUserId, $profile['user_id']);
-            $contactStatus = $contactRequest['status'] ?? null;
-        }
-        
-        // Check if profile is in favorites
-        $isFavorite = false;
-        if ($currentUserId) {
-            require_once SITE_ROOT . '/app/models/FavoriteModel.php';
-            $favoriteModel = new FavoriteModel();
-            $isFavorite = $favoriteModel->isFavorite($currentUserId, $profile['user_id']);
-        }
-        
-        $data = [
-            'title' => $profile['first_name'] . ' ' . $profile['last_name'] . ' - Profile',
-            'profile' => $profile,
-            'similar_profiles' => $similarProfiles,
-            'contact_status' => $contactStatus,
-            'is_favorite' => $isFavorite,
-            'csrf_token' => $this->generateCsrf(),
-            'scripts' => ['profile-view']
-        ];
-        
-        $this->layout('main', 'profiles/view', $data);
     }
     
     public function edit() {

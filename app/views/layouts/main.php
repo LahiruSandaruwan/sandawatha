@@ -140,15 +140,15 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-dark text-light py-5 mt-5">
+    <footer class="bg-dark py-5 mt-5">
         <div class="container">
             <div class="row">
                 <div class="col-md-4">
-                    <h5 class="mb-3">
+                    <h5 class="mb-3 text-light">
                         <i class="bi bi-heart-fill text-danger"></i>
                         Sandawatha.lk
                     </h5>
-                    <p class="text-muted">Find your perfect life partner in Sri Lanka. Join thousands of verified profiles on the most trusted matrimonial platform.</p>
+                    <p class="text-light opacity-75">Find your perfect life partner in Sri Lanka. Join thousands of verified profiles on the most trusted matrimonial platform.</p>
                     <div class="social-links">
                         <a href="#" class="text-light me-3"><i class="bi bi-facebook"></i></a>
                         <a href="#" class="text-light me-3"><i class="bi bi-twitter"></i></a>
@@ -158,28 +158,28 @@
                 </div>
                 
                 <div class="col-md-2">
-                    <h6 class="mb-3">Quick Links</h6>
+                    <h6 class="mb-3 text-light">Quick Links</h6>
                     <ul class="list-unstyled">
-                        <li><a href="<?= BASE_URL ?>/" class="text-muted text-decoration-none">Home</a></li>
-                        <li><a href="<?= BASE_URL ?>/browse" class="text-muted text-decoration-none">Browse</a></li>
-                        <li><a href="<?= BASE_URL ?>/about" class="text-muted text-decoration-none">About</a></li>
-                        <li><a href="<?= BASE_URL ?>/contact" class="text-muted text-decoration-none">Contact</a></li>
+                        <li><a href="<?= BASE_URL ?>/" class="text-light text-decoration-none opacity-75">Home</a></li>
+                        <li><a href="<?= BASE_URL ?>/browse" class="text-light text-decoration-none opacity-75">Browse</a></li>
+                        <li><a href="<?= BASE_URL ?>/about" class="text-light text-decoration-none opacity-75">About</a></li>
+                        <li><a href="<?= BASE_URL ?>/contact" class="text-light text-decoration-none opacity-75">Contact</a></li>
                     </ul>
                 </div>
                 
                 <div class="col-md-2">
-                    <h6 class="mb-3">Support</h6>
+                    <h6 class="mb-3 text-light">Support</h6>
                     <ul class="list-unstyled">
-                        <li><a href="<?= BASE_URL ?>/feedback" class="text-muted text-decoration-none">Feedback</a></li>
-                        <li><a href="<?= BASE_URL ?>/privacy-policy" class="text-muted text-decoration-none">Privacy Policy</a></li>
-                        <li><a href="<?= BASE_URL ?>/terms-conditions" class="text-muted text-decoration-none">Terms</a></li>
-                        <li><a href="#" class="text-muted text-decoration-none">Help</a></li>
+                        <li><a href="<?= BASE_URL ?>/feedback" class="text-light text-decoration-none opacity-75">Feedback</a></li>
+                        <li><a href="<?= BASE_URL ?>/privacy-policy" class="text-light text-decoration-none opacity-75">Privacy Policy</a></li>
+                        <li><a href="<?= BASE_URL ?>/terms-conditions" class="text-light text-decoration-none opacity-75">Terms</a></li>
+                        <li><a href="#" class="text-light text-decoration-none opacity-75">Help</a></li>
                     </ul>
                 </div>
                 
                 <div class="col-md-4">
-                    <h6 class="mb-3">Newsletter</h6>
-                    <p class="text-muted mb-3">Stay updated with new features and matches.</p>
+                    <h6 class="mb-3 text-light">Newsletter</h6>
+                    <p class="text-light opacity-75 mb-3">Stay updated with new features and matches.</p>
                     <form class="newsletter-form" onsubmit="subscribeNewsletter(event)">
                         <div class="input-group">
                             <input type="email" class="form-control" placeholder="Your email" required>
@@ -189,14 +189,14 @@
                 </div>
             </div>
             
-            <hr class="my-4">
+            <hr class="my-4 opacity-25">
             
             <div class="row align-items-center">
                 <div class="col-md-6">
-                    <p class="text-muted mb-0">&copy; <?= date('Y') ?> Sandawatha.lk. All rights reserved.</p>
+                    <p class="text-light opacity-75 mb-0">&copy; <?= date('Y') ?> Sandawatha.lk. All rights reserved.</p>
                 </div>
                 <div class="col-md-6 text-end">
-                    <p class="text-muted mb-0">Made with <i class="bi bi-heart-fill text-danger"></i> in Sri Lanka</p>
+                    <p class="text-light opacity-75 mb-0">Made with <i class="bi bi-heart-fill text-danger"></i> in Sri Lanka</p>
                 </div>
             </div>
         </div>

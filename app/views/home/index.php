@@ -134,7 +134,7 @@
             <div class="col-md-4">
                 <div class="feature-card text-center p-4 h-100">
                     <div class="feature-icon bg-danger text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                        <i class="bi bi-heart-pulse" style="font-size: 2rem;"></i>
+                        <i class="bi bi-file-medical" style="font-size: 2rem;"></i>
                     </div>
                     <h5 class="fw-bold mb-3">Health Screening</h5>
                     <p class="text-muted">Optional health report uploads with basic risk analysis for transparent health information sharing.</p>
@@ -143,7 +143,7 @@
             
             <div class="col-md-4">
                 <div class="feature-card text-center p-4 h-100">
-                    <div class="feature-icon bg-purple text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                    <div class="feature-icon bg-dark text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
                         <i class="bi bi-chat-dots" style="font-size: 2rem;"></i>
                     </div>
                     <h5 class="fw-bold mb-3">Secure Messaging</h5>
@@ -292,8 +292,8 @@
                     <div class="couple-icon-large mb-4 mx-auto text-center">
                         <img src="<?= BASE_URL ?>/assets/images/c1.png"
                              alt="Priya & Kasun"
-                             class="img-fluid couple-img"
-                             onerror="this.onerror=null;this.src='https://via.placeholder.com/160?text=Priya+%26+Kasun';">
+                             class="couple-img"
+                             onerror="this.onerror=null;this.src='https://via.placeholder.com/240?text=Priya+%26+Kasun';">
                     </div>
                     <div class="text-warning mb-3">
                         <i class="bi bi-star-fill"></i>
@@ -318,8 +318,8 @@
                     <div class="couple-icon-large mb-4 mx-auto text-center">
                         <img src="<?= BASE_URL ?>/assets/images/c2.png"
                              alt="Nuwan & Dilini"
-                             class="img-fluid couple-img"
-                             onerror="this.onerror=null;this.src='https://via.placeholder.com/160?text=Nuwan+%26+Dilini';">
+                             class="couple-img"
+                             onerror="this.onerror=null;this.src='https://via.placeholder.com/240?text=Nuwan+%26+Dilini';">
                     </div>
                     <div class="text-warning mb-3">
                         <i class="bi bi-star-fill"></i>
@@ -344,8 +344,8 @@
                     <div class="couple-icon-large mb-4 mx-auto text-center">
                         <img src="<?= BASE_URL ?>/assets/images/c3.png"
                              alt="Chamara & Sachini"
-                             class="img-fluid couple-img"
-                             onerror="this.onerror=null;this.src='https://via.placeholder.com/160?text=Chamara+%26+Sachini';">
+                             class="couple-img"
+                             onerror="this.onerror=null;this.src='https://via.placeholder.com/240?text=Chamara+%26+Sachini';">
                     </div>
                     <div class="text-warning mb-3">
                         <i class="bi bi-star-fill"></i>
