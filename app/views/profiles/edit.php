@@ -132,9 +132,12 @@
                                 <label for="marital_status" class="form-label">Marital Status</label>
                                 <select class="form-select" id="marital_status" name="marital_status">
                                     <option value="">Select Status</option>
+                                    <option value="single" <?= ($profile['marital_status'] ?? '') === 'single' ? 'selected' : '' ?>>Single</option>
                                     <option value="never_married" <?= ($profile['marital_status'] ?? '') === 'never_married' ? 'selected' : '' ?>>Never Married</option>
                                     <option value="divorced" <?= ($profile['marital_status'] ?? '') === 'divorced' ? 'selected' : '' ?>>Divorced</option>
+                                    <option value="separated" <?= ($profile['marital_status'] ?? '') === 'separated' ? 'selected' : '' ?>>Separated</option>
                                     <option value="widowed" <?= ($profile['marital_status'] ?? '') === 'widowed' ? 'selected' : '' ?>>Widowed</option>
+                                    <option value="annulled" <?= ($profile['marital_status'] ?? '') === 'annulled' ? 'selected' : '' ?>>Annulled</option>
                                 </select>
                             </div>
                         </div>

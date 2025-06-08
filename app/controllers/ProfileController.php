@@ -128,6 +128,11 @@ class ProfileController extends BaseController {
         
         $data = $this->sanitizeInput($_POST);
         
+        // Decode HTML entities for education field
+        if (isset($data['education'])) {
+            $data['education'] = html_entity_decode($data['education'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+        
         // Validate required fields
         $requiredFields = ['first_name', 'last_name', 'date_of_birth', 'gender', 'religion', 'district', 'height_cm', 'education'];
         foreach ($requiredFields as $field) {

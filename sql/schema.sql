@@ -33,7 +33,7 @@ CREATE TABLE user_profiles (
     caste VARCHAR(50) NULL,
     district VARCHAR(50) NOT NULL,
     city VARCHAR(100) NULL,
-    marital_status ENUM('never_married', 'divorced', 'widowed') DEFAULT 'never_married',
+    marital_status ENUM('single', 'never_married', 'divorced', 'separated', 'widowed', 'annulled') DEFAULT 'single',
     height_cm INT NOT NULL,
     education VARCHAR(100) NOT NULL,
     occupation VARCHAR(100) NULL,
