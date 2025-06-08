@@ -50,15 +50,17 @@
             <div class="col-lg-6">
                 <div class="hero-image text-center slide-in-left">
                     <div class="position-relative">
-                        <img src="<?= BASE_URL ?>/assets/images/couple-hero.jpg" 
+                        <img src="<?= BASE_URL ?>/assets/images/happy-couple.png"
                              alt="Happy Couple" class="img-fluid rounded-3 shadow-lg"
-                             style="max-height: 500px; object-fit: cover;">
+                             style="max-height: 500px; object-fit: cover;"
+                             onerror="this.onerror=null;this.src='https://via.placeholder.com/500x400?text=Happy+Couple';">
                         
                         <!-- Floating testimonial -->
                         <div class="testimonial-float position-absolute bottom-0 start-0 bg-white text-dark p-3 rounded-3 shadow-lg m-3" style="max-width: 250px;">
                             <div class="d-flex align-items-center mb-2">
-                                <img src="<?= BASE_URL ?>/assets/images/testimonial-1.jpg" 
-                                     alt="User" class="rounded-circle me-2" width="40" height="40">
+                                <img src="<?= BASE_URL ?>/assets/images/c1.png"
+                                     alt="User" class="rounded-circle me-2" width="40" height="40"
+                                     onerror="this.onerror=null;this.src='https://via.placeholder.com/40?text=User';">
                                 <div>
                                     <h6 class="mb-0">Priya & Kasun</h6>
                                     <small class="text-muted">Married 2023</small>
@@ -276,7 +278,7 @@
 </section>
 
 <!-- Testimonials Section -->
-<section class="testimonials-section py-5">
+<section class="testimonials-section py-5 bg-light">
     <div class="container">
         <div class="text-center mb-5">
             <h2 class="fw-bold mb-3">Success Stories</h2>
@@ -284,8 +286,15 @@
         </div>
         
         <div class="row g-4">
+            <!-- First Success Story -->
             <div class="col-md-4">
-                <div class="testimonial-card bg-white p-4 rounded-3 shadow-sm h-100">
+                <div class="testimonial-card bg-white p-4 rounded-4 shadow-sm h-100">
+                    <div class="couple-icon-large mb-4 mx-auto text-center">
+                        <img src="<?= BASE_URL ?>/assets/images/c1.png"
+                             alt="Priya & Kasun"
+                             class="img-fluid couple-img"
+                             onerror="this.onerror=null;this.src='https://via.placeholder.com/160?text=Priya+%26+Kasun';">
+                    </div>
                     <div class="text-warning mb-3">
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
@@ -293,19 +302,25 @@
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
                     </div>
-                    <p class="mb-3">"The AI matching feature was incredible! It suggested my now-husband based on our compatibility, and we're so grateful to Sandawatha.lk for bringing us together."</p>
+                    <p class="text-muted mb-3">"We met through Sandawatha and instantly connected. The platform made it easy to find someone who shared our values and culture."</p>
                     <div class="d-flex align-items-center">
-                        <img src="<?= BASE_URL ?>/assets/images/testimonial-1.jpg" alt="Couple" class="rounded-circle me-3" width="50" height="50">
                         <div>
-                            <h6 class="mb-0">Priya & Kasun</h6>
-                            <small class="text-muted">Married in 2023</small>
+                            <h6 class="mb-1">Priya & Kasun</h6>
+                            <small class="text-muted">Married 2 years</small>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Second Success Story -->
             <div class="col-md-4">
-                <div class="testimonial-card bg-white p-4 rounded-3 shadow-sm h-100">
+                <div class="testimonial-card bg-white p-4 rounded-4 shadow-sm h-100">
+                    <div class="couple-icon-large mb-4 mx-auto text-center">
+                        <img src="<?= BASE_URL ?>/assets/images/c2.png"
+                             alt="Nuwan & Dilini"
+                             class="img-fluid couple-img"
+                             onerror="this.onerror=null;this.src='https://via.placeholder.com/160?text=Nuwan+%26+Dilini';">
+                    </div>
                     <div class="text-warning mb-3">
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
@@ -313,19 +328,25 @@
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
                     </div>
-                    <p class="mb-3">"The horoscope matching feature gave us confidence that we were meant to be together. Traditional values with modern convenience - perfect!"</p>
+                    <p class="text-muted mb-3">"The matching system on Sandawatha helped us find each other. We're grateful for this platform bringing us together."</p>
                     <div class="d-flex align-items-center">
-                        <img src="<?= BASE_URL ?>/assets/images/testimonial-2.jpg" alt="Couple" class="rounded-circle me-3" width="50" height="50">
                         <div>
-                            <h6 class="mb-0">Thilini & Rohan</h6>
-                            <small class="text-muted">Married in 2023</small>
+                            <h6 class="mb-1">Nuwan & Dilini</h6>
+                            <small class="text-muted">Married 1 year</small>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Third Success Story -->
             <div class="col-md-4">
-                <div class="testimonial-card bg-white p-4 rounded-3 shadow-sm h-100">
+                <div class="testimonial-card bg-white p-4 rounded-4 shadow-sm h-100">
+                    <div class="couple-icon-large mb-4 mx-auto text-center">
+                        <img src="<?= BASE_URL ?>/assets/images/c3.png"
+                             alt="Chamara & Sachini"
+                             class="img-fluid couple-img"
+                             onerror="this.onerror=null;this.src='https://via.placeholder.com/160?text=Chamara+%26+Sachini';">
+                    </div>
                     <div class="text-warning mb-3">
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
@@ -333,12 +354,11 @@
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
                     </div>
-                    <p class="mb-3">"The verification process made us feel safe, and the video introductions helped us connect better before meeting in person."</p>
+                    <p class="text-muted mb-3">"What started as a simple message on Sandawatha turned into a beautiful journey of love and understanding."</p>
                     <div class="d-flex align-items-center">
-                        <img src="<?= BASE_URL ?>/assets/images/testimonial-3.jpg" alt="Couple" class="rounded-circle me-3" width="50" height="50">
                         <div>
-                            <h6 class="mb-0">Anjali & Nuwan</h6>
-                            <small class="text-muted">Married in 2024</small>
+                            <h6 class="mb-1">Chamara & Sachini</h6>
+                            <small class="text-muted">Married 6 months</small>
                         </div>
                     </div>
                 </div>

@@ -104,6 +104,110 @@ html {
     font-weight: 600;
 }
 
+/* Testimonial Styles */
+.testimonial-card {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.couple-icon-large {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 160px;
+    height: 160px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.couple-img {
+    width: 160px;
+    height: 160px;
+    transition: all 0.5s ease;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+.testimonial-card:hover .couple-img {
+    transform: scale(1.1);
+    filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.15));
+}
+
+.couple-primary {
+    transition: all 0.3s ease;
+}
+
+.couple-secondary {
+    transition: all 0.3s ease;
+}
+
+.couple-accent {
+    transition: all 0.3s ease;
+}
+
+.testimonial-card:hover .couple-primary {
+    transform: translateX(-2px) translateY(-2px);
+}
+
+.testimonial-card:hover .couple-secondary {
+    transform: translateX(2px) translateY(-2px);
+}
+
+.testimonial-card:hover .couple-accent {
+    transform: translateY(2px);
+}
+
+.couple-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.couple-icon i {
+    font-size: 1.75rem;
+    color: white;
+    position: relative;
+    z-index: 2;
+}
+
+.couple-icon::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    transition: transform 0.5s ease;
+}
+
+.gradient-love::before {
+    background: linear-gradient(45deg, #ff6b6b, #ffa3a3);
+}
+
+.gradient-sunset::before {
+    background: linear-gradient(45deg, #ff9a9e, #fad0c4);
+}
+
+.gradient-ocean::before {
+    background: linear-gradient(45deg, #4facfe, #00f2fe);
+}
+
+.testimonial-card:hover .couple-icon {
+    transform: scale(1.1);
+}
+
+.testimonial-card:hover .couple-icon::before {
+    transform: rotate(180deg);
+}
+
 /* Profile Card Styles */
 .profile-card {
     border-radius: 15px;
@@ -624,4 +728,40 @@ button:focus, .btn:focus {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
+}
+
+/* Hero Section Styles */
+.hero-image-main {
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    transition: all 0.5s ease;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+.hero-image-main:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+}
+
+.hero-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1) 0%, rgba(13, 110, 253, 0.05) 100%);
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
 }
