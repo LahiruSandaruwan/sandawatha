@@ -359,6 +359,95 @@
     </div>
 </div>
 
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Privacy Settings</h5>
+    </div>
+    <div class="card-body">
+        <form id="privacySettingsForm">
+            <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
+            
+            <div class="mb-3">
+                <label class="form-label">Default Profile Visibility</label>
+                <select name="default_privacy" class="form-select">
+                    <option value="public" <?= ($profile['privacy_settings']['default'] ?? 'registered') === 'public' ? 'selected' : '' ?>>Public - Anyone can view</option>
+                    <option value="registered" <?= ($profile['privacy_settings']['default'] ?? 'registered') === 'registered' ? 'selected' : '' ?>>Registered Users Only</option>
+                    <option value="private" <?= ($profile['privacy_settings']['default'] ?? 'registered') === 'private' ? 'selected' : '' ?>>Private - Only Connected Users</option>
+                </select>
+                <div class="form-text">This controls who can view your profile by default.</div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Profile Photo</label>
+                        <select name="photo_privacy" class="form-select">
+                            <option value="public" <?= ($profile['privacy_settings']['photo'] ?? 'registered') === 'public' ? 'selected' : '' ?>>Public</option>
+                            <option value="registered" <?= ($profile['privacy_settings']['photo'] ?? 'registered') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
+                            <option value="private" <?= ($profile['privacy_settings']['photo'] ?? 'registered') === 'private' ? 'selected' : '' ?>>Connected Only</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Contact Information</label>
+                        <select name="contact_privacy" class="form-select">
+                            <option value="registered" <?= ($profile['privacy_settings']['contact'] ?? 'private') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
+                            <option value="private" <?= ($profile['privacy_settings']['contact'] ?? 'private') === 'private' ? 'selected' : '' ?>>Connected Only</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Horoscope</label>
+                        <select name="horoscope_privacy" class="form-select">
+                            <option value="registered" <?= ($profile['privacy_settings']['horoscope'] ?? 'private') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
+                            <option value="private" <?= ($profile['privacy_settings']['horoscope'] ?? 'private') === 'private' ? 'selected' : '' ?>>Connected Only</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Income Information</label>
+                        <select name="income_privacy" class="form-select">
+                            <option value="registered" <?= ($profile['privacy_settings']['income'] ?? 'private') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
+                            <option value="private" <?= ($profile['privacy_settings']['income'] ?? 'private') === 'private' ? 'selected' : '' ?>>Connected Only</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Bio & About Me</label>
+                        <select name="bio_privacy" class="form-select">
+                            <option value="public" <?= ($profile['privacy_settings']['bio'] ?? 'registered') === 'public' ? 'selected' : '' ?>>Public</option>
+                            <option value="registered" <?= ($profile['privacy_settings']['bio'] ?? 'registered') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
+                            <option value="private" <?= ($profile['privacy_settings']['bio'] ?? 'registered') === 'private' ? 'selected' : '' ?>>Connected Only</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Education & Career</label>
+                        <select name="education_privacy" class="form-select">
+                            <option value="public" <?= ($profile['privacy_settings']['education'] ?? 'registered') === 'public' ? 'selected' : '' ?>>Public</option>
+                            <option value="registered" <?= ($profile['privacy_settings']['education'] ?? 'registered') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
+                            <option value="private" <?= ($profile['privacy_settings']['education'] ?? 'registered') === 'private' ? 'selected' : '' ?>>Connected Only</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save Privacy Settings</button>
+        </form>
+    </div>
+</div>
+
 <script>
 // Define base URL for API endpoints
 const BASE_URL = '<?= BASE_URL ?>';
@@ -424,6 +513,28 @@ document.getElementById('horoscopeUploadForm').addEventListener('submit', functi
     .catch(error => {
         console.error('Upload error:', error);
         alert('Upload failed: ' + error.message);
+    });
+});
+
+document.getElementById('privacySettingsForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('<?= BASE_URL ?>/profile/privacy-settings', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+        } else {
+            showAlert(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showAlert('Failed to update privacy settings. Please try again.', 'error');
     });
 });
 </script>

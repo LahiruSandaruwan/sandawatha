@@ -135,7 +135,14 @@
 
     <!-- Main Content -->
     <main>
-        <?php include SITE_ROOT . '/app/views/' . $content_view . '.php'; ?>
+        <?php 
+        $viewFile = SITE_ROOT . '/app/views/' . $content_view . '.php';
+        if (file_exists($viewFile)) {
+            include $viewFile;
+        } else {
+            echo '<div class="container py-4"><div class="alert alert-danger">View file not found: ' . htmlspecialchars($content_view) . '</div></div>';
+        }
+        ?>
     </main>
 
     <!-- Footer -->

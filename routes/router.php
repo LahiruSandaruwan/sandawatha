@@ -26,17 +26,18 @@ class Router {
         // Public browsing and search
         $this->addRoute('GET', '/browse', 'ProfileController', 'browse');
         $this->addRoute('POST', '/search', 'ProfileController', 'search');
+        $this->addRoute('GET', '/profile/([0-9]+)', 'ProfileController', 'viewProfile');
         
         // Protected routes (require authentication)
         $this->addRoute('GET', '/dashboard', 'DashboardController', 'index', ['auth']);
         
-        // Profile routes (all require auth)
+        // Profile routes
         $this->addRoute('GET', '/profile/edit', 'ProfileController', 'edit', ['auth']);
         $this->addRoute('POST', '/profile/update', 'ProfileController', 'update', ['auth']);
         $this->addRoute('POST', '/profile/upload-photo', 'ProfileController', 'uploadPhoto', ['auth']);
         $this->addRoute('POST', '/profile/upload-horoscope', 'ProfileController', 'uploadHoroscope', ['auth']);
+        $this->addRoute('POST', '/profile/privacy-settings', 'ProfileController', 'updatePrivacySettings', ['auth']);
         $this->addRoute('POST', '/profile/search', 'ProfileController', 'search', ['auth']);
-        $this->addRoute('GET', '/profile/(\d+)', 'ProfileController', 'viewProfile', ['auth']);
         $this->addRoute('GET', '/profile', 'ProfileController', 'index', ['auth']);
         
         // Newsletter and feedback
@@ -128,8 +129,8 @@ class Router {
                 continue;
             }
             
-            // Convert named parameters to regex pattern
-            $pattern = preg_replace('/:[a-zA-Z]+/', '([^/]+)', $route['pattern']);
+            // Convert route pattern to regex
+            $pattern = str_replace('/', '\/', $route['pattern']);
             $pattern = '#^' . $pattern . '$#';
             
             if (preg_match($pattern, $requestUri, $matches)) {
