@@ -4,9 +4,6 @@ abstract class BaseController {
     protected function view($view, $data = []) {
         extract($data);
         
-        // Start output buffering
-        ob_start();
-        
         // Include the view file
         $viewFile = SITE_ROOT . '/app/views/' . $view . '.php';
         
@@ -15,17 +12,22 @@ abstract class BaseController {
         } else {
             throw new Exception("View file not found: " . $view);
         }
-        
-        // Get the buffered content
-        $content = ob_get_clean();
-        
-        // Output the content
-        echo $content;
     }
     
     protected function layout($layout, $view, $data = []) {
         $data['content_view'] = $view;
-        $this->view('layouts/' . $layout, $data);
+        
+        // Extract data to make variables available in the layout
+        extract($data);
+        
+        // Include the layout file
+        $layoutFile = SITE_ROOT . '/app/views/layouts/' . $layout . '.php';
+        
+        if (file_exists($layoutFile)) {
+            include $layoutFile;
+        } else {
+            throw new Exception("Layout file not found: " . $layout);
+        }
     }
     
     protected function json($data, $status = 200) {
@@ -216,6 +218,18 @@ abstract class BaseController {
         if ($feature && !($features[$feature] ?? false)) {
             $this->redirectWithMessage('/premium', 'This feature requires a premium membership.', 'warning');
         }
+    }
+    
+    protected function getUrlParameters() {
+        $uri = $_SERVER['REQUEST_URI'];
+        $path = parse_url($uri, PHP_URL_PATH);
+        $path = trim($path, '/');
+        $segments = explode('/', $path);
+        
+        // Remove the first segment (controller name)
+        array_shift($segments);
+        
+        return $segments;
     }
 }
 ?>

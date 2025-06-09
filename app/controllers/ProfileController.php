@@ -44,112 +44,49 @@ class ProfileController extends BaseController {
         $this->layout('main', 'profiles/browse', $data);
     }
     
-    public function viewProfile($profileId) {
+    public function viewProfile() {
         try {
-            error_log("\n\n=== Start viewProfile ===");
-            error_log("Session data: " . print_r($_SESSION, true));
-            error_log("Request URI: " . $_SERVER['REQUEST_URI']);
-            error_log("Profile ID requested: " . $profileId);
+            $urlParams = $this->getUrlParameters();
+            $profileId = isset($urlParams[0]) ? (int)$urlParams[0] : null;
             
-            // Validate profile ID
-            $profileId = (int)$profileId;
-            if ($profileId <= 0) {
-                error_log("Invalid profile ID: {$profileId}");
-                $this->redirectWithMessage('/', 'Invalid profile ID.', 'error');
+            if (!$profileId) {
+                $this->redirectWithMessage('/home', 'Profile not found', 'error');
                 return;
             }
 
-            // Get current user ID from session
-            $currentUserId = $_SESSION['user_id'] ?? null;
-            error_log("Current user ID from session: " . ($currentUserId ?? 'null'));
-            
-            if (!$currentUserId) {
-                error_log("No user logged in, redirecting to login");
-                $this->redirect('/login');
-                return;
-            }
+            $viewerId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+            $profile = $this->profileModel->getProfileWithUser($profileId, $viewerId);
 
-            // If user is trying to view their own profile, redirect to edit
-            if ($currentUserId == $profileId) {
-                error_log("User is viewing their own profile, redirecting to edit");
-                $this->redirect('/profile/edit');
-                return;
-            }
-
-            // Get the requested profile
-            error_log("Fetching profile for ID: {$profileId}");
-            $profile = $this->profileModel->getProfileWithUser($profileId, $currentUserId);
-            error_log("Profile fetch result: " . ($profile ? json_encode($profile, JSON_PRETTY_PRINT) : "Profile not found"));
-
-            // Handle profile not found or not accessible
             if (!$profile) {
-                error_log("Profile not found or not accessible");
-                $this->redirectWithMessage('/', 'Profile not found or is not accessible.', 'error');
+                $this->redirectWithMessage('/home', 'Profile not found', 'error');
                 return;
             }
 
-            // Track profile view
-            try {
-                error_log("Recording profile view");
-                $this->profileModel->incrementViewCount($profileId, $currentUserId);
-            } catch (Exception $e) {
-                error_log("Error recording view: " . $e->getMessage());
-                // Non-critical error, continue without failing
-            }
-
-            // Get similar profiles
-            $similarProfiles = [];
-            try {
-                $similarProfiles = $this->profileModel->getSimilarProfiles($profileId, 6);
-                error_log("Found " . count($similarProfiles) . " similar profiles");
-            } catch (Exception $e) {
-                error_log("Error getting similar profiles: " . $e->getMessage());
-                // Non-critical error, continue with empty array
-            }
-
-            // Get contact status
+            // Get contact status if user is logged in
             $contactStatus = null;
-            try {
+            if ($viewerId && $viewerId !== (int)$profileId) {
                 require_once SITE_ROOT . '/app/models/ContactRequestModel.php';
                 $contactModel = new ContactRequestModel();
-                $request = $contactModel->getRequestBetweenUsers($currentUserId, $profileId);
-                $contactStatus = $request['status'] ?? null;
-                error_log("Contact status: " . ($contactStatus ?? 'none'));
-            } catch (Exception $e) {
-                error_log("Error getting contact status: " . $e->getMessage());
-                // Non-critical error, continue with null status
+                $request = $contactModel->getRequestBetweenUsers($viewerId, $profileId);
+                $contactStatus = $request ? $request['status'] : null;
             }
 
-            // Check if profile is favorited
-            $isFavorite = false;
-            try {
-                require_once SITE_ROOT . '/app/models/FavoriteModel.php';
-                $favoriteModel = new FavoriteModel();
-                $isFavorite = $favoriteModel->isFavorite($currentUserId, $profileId);
-                error_log("Is favorite: " . ($isFavorite ? 'yes' : 'no'));
-            } catch (Exception $e) {
-                error_log("Error checking favorite status: " . $e->getMessage());
-                // Non-critical error, continue with false
-            }
-
-            // Prepare view data
+            // Prepare data for view
             $data = [
-                'title'             => trim($profile['first_name'] . ' ' . $profile['last_name']) . ' - Profile',
-                'profile'           => $profile,
-                'similar_profiles'  => $similarProfiles,
-                'contact_status'    => $contactStatus,
-                'is_favorite'       => $isFavorite,
-                'csrf_token'        => $this->generateCsrf(),
-                'scripts'           => ['profile-view']
+                'profile' => $profile,
+                'title' => $profile['first_name'] . "'s Profile - Sandawatha.lk",
+                'description' => "View {$profile['first_name']}'s profile on Sandawatha.lk - Sri Lanka's trusted matrimonial platform",
+                'isOwnProfile' => $viewerId === (int)$profileId,
+                'is_favorite' => $profile['is_favorite'] ?? false,
+                'contact_status' => $contactStatus,
+                'csrf_token' => $this->generateCsrf()
             ];
 
-            error_log("Rendering profile view with data: " . print_r($data, true));
             $this->layout('main', 'profiles/view', $data);
 
         } catch (Exception $e) {
             error_log("Error in viewProfile: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
-            $this->redirectWithMessage('/', 'An error occurred while loading the profile. Please try again later.', 'error');
+            $this->redirectWithMessage('/home', 'An error occurred while loading the profile', 'error');
         }
     }
     
@@ -401,6 +338,54 @@ class ProfileController extends BaseController {
         ]);
     }
     
+    public function updatePrivacySettings() {
+        if (!$this->validateCsrf()) {
+            $this->json(['success' => false, 'message' => 'Invalid security token'], 400);
+        }
+
+        $currentUser = $this->getCurrentUser();
+        if (!$currentUser) {
+            $this->json(['success' => false, 'message' => 'Not authenticated'], 401);
+        }
+
+        $settings = [
+            'default' => $_POST['default_privacy'] ?? 'registered',
+            'photo' => $_POST['photo_privacy'] ?? 'registered',
+            'contact' => $_POST['contact_privacy'] ?? 'private',
+            'horoscope' => $_POST['horoscope_privacy'] ?? 'private',
+            'income' => $_POST['income_privacy'] ?? 'private',
+            'bio' => $_POST['bio_privacy'] ?? 'registered',
+            'education' => $_POST['education_privacy'] ?? 'registered',
+            'occupation' => $_POST['occupation_privacy'] ?? 'registered',
+            'goals' => $_POST['goals_privacy'] ?? 'registered'
+        ];
+
+        // Validate settings
+        $allowedValues = ['public', 'registered', 'private'];
+        foreach ($settings as $key => $value) {
+            if (!in_array($value, $allowedValues)) {
+                $this->json(['success' => false, 'message' => "Invalid privacy value for {$key}"], 400);
+            }
+        }
+
+        try {
+            $success = $this->profileModel->updateProfile($currentUser['id'], [
+                'privacy_settings' => json_encode($settings)
+            ]);
+
+            if ($success) {
+                $this->json([
+                    'success' => true,
+                    'message' => 'Privacy settings updated successfully!'
+                ]);
+            } else {
+                $this->json(['success' => false, 'message' => 'Failed to update privacy settings'], 500);
+            }
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+    
     private function calculateAge($birthDate) {
         if (empty($birthDate) || $birthDate === '0000-00-00') {
             return null;
@@ -470,6 +455,10 @@ class ProfileController extends BaseController {
             'O/L', 'A/L', 'Diploma', 'Bachelor\'s Degree', 'Master\'s Degree',
             'PhD/Doctorate', 'Professional Qualification', 'Other'
         ];
+    }
+
+    public function view($view = null, $data = []) {
+        return $this->viewProfile();
     }
 }
 ?>
