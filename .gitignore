@@ -59,4 +59,8 @@ config/*.php
 dist/
 build/
 *.min.js
-*.min.css 
+*.min.css
+
+# Test and development files
+test_data.php
+migrate.php 
