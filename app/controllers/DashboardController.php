@@ -33,7 +33,8 @@ class DashboardController extends BaseController {
         $profileViews = $this->profileModel->getProfileViews($currentUser['id'], 30);
         
         // Get contact requests
-        $contactRequests = $this->contactModel->getReceivedRequests($currentUser['id'], 1, 5);
+        $recent_requests = $this->contactModel->getReceivedRequests($currentUser['id'], 1, 5);
+        $contact_stats   = $this->contactModel->getRequestStats($currentUser['id']);
         
         // Get suggested matches
         $suggestedMatches = $this->profileModel->getSimilarProfiles($currentUser['id'], 4);
@@ -42,18 +43,27 @@ class DashboardController extends BaseController {
         $recentVisitors = $this->profileModel->getRecentVisitors($currentUser['id'], 5);
         
         // Get premium features
-        $features = $this->premiumModel->getUserFeatures($currentUser['id']);
+        $premium_membership = $this->premiumModel->getActiveMembership($currentUser['id']);
+        $premium_features   = $this->premiumModel->getUserFeatures($currentUser['id']);
         
+        $profile_completion = isset($profile['profile_completion'])
+            ? (int)$profile['profile_completion']
+            : 0;
+
         $data = [
-            'title' => 'Dashboard - Sandawatha.lk',
-            'profile' => $profile,
-            'profile_views' => $profileViews,
-            'contact_requests' => $contactRequests,
-            'suggested_matches' => $suggestedMatches,
-            'recent_visitors' => $recentVisitors,
-            'features' => $features,
-            'csrf_token' => $this->generateCsrf(),
-            'scripts' => ['dashboard']
+            'title'              => 'Dashboard - Sandawatha.lk',
+            'profile'            => $profile,
+            'profile_views'      => $profileViews,
+            'recent_requests'    => $recent_requests,
+            'contact_stats'      => $contact_stats,
+            'favorite_stats'     => $this->favoriteModel->getFavoriteStats($currentUser['id']),
+            'suggested_matches'  => $suggestedMatches,
+            'recent_visitors'    => $recentVisitors,
+            'profile_completion' => $profile_completion,
+            'premium_membership' => $premium_membership,
+            'premium_features'   => $premium_features,
+            'csrf_token'         => $this->generateCsrf(),
+            'scripts'            => ['dashboard']
         ];
         
         $this->layout('main', 'dashboard/index', $data);

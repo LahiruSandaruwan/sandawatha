@@ -44,147 +44,65 @@ class ProfileController extends BaseController {
         $this->layout('main', 'profiles/browse', $data);
     }
     
-    public function viewProfile($userId) {
+    public function viewProfile($profileId) {
         try {
             $currentUserId = $_SESSION['user_id'] ?? null;
-            $profile = $this->profileModel->findByUserId($userId);
-            
+
+            $profile = $this->profileModel->getProfileWithUser($profileId, $currentUserId);
             if (!$profile) {
                 $this->redirectWithMessage('/', 'Profile not found or is not accessible.', 'error');
                 return;
             }
-            
-            // Get user details
-            require_once SITE_ROOT . '/app/models/UserModel.php';
-            $userModel = new UserModel();
-            $user = $userModel->find($userId);
-            
-            if (!$user || $user['status'] !== 'active') {
-                $this->redirectWithMessage('/', 'Profile not found or is not accessible.', 'error');
+
+            if ($currentUserId && $currentUserId == $profile['user_id']) {
+                $this->redirect('/profile/edit');
                 return;
             }
-            
-            // Merge user details with profile
-            $profile['email'] = $user['email'];
-            $profile['phone'] = $user['phone'];
-            $profile['user_status'] = $user['status'];
-            $profile['member_since'] = $user['created_at'];
-            
-            // If viewer is the profile owner, return full profile
-            if ($currentUserId && $currentUserId == $userId) {
-                // Skip privacy checks for own profile
-            } else {
-                // Apply privacy settings
-                $privacySettings = json_decode($profile['privacy_settings'], true) ?? [
-                    'photo' => 'public',
-                    'contact' => 'private',
-                    'horoscope' => 'private',
-                    'income' => 'private',
-                    'bio' => 'public',
-                    'education' => 'public',
-                    'occupation' => 'public',
-                    'goals' => 'private'
-                ];
 
-                // Fields that are always public
-                $publicFields = [
-                    'id', 'user_id', 'first_name', 'last_name', 'gender',
-                    'religion', 'district', 'marital_status', 'height_cm',
-                    'view_count', 'profile_completion', 'created_at', 'updated_at'
-                ];
-
-                // Fields that require contact acceptance
-                $privateFields = [
-                    'email', 'phone', 'caste', 'city', 'income_lkr',
-                    'wants_migration', 'career_focused', 'wants_early_marriage',
-                    'horoscope_file'
-                ];
-
-                // Get contact status
-                $contactStatus = null;
-                if ($currentUserId) {
-                    require_once SITE_ROOT . '/app/models/ContactRequestModel.php';
-                    $contactModel = new ContactRequestModel();
-                    $contactRequest = $contactModel->getRequestBetweenUsers($currentUserId, $userId);
-                    $contactStatus = $contactRequest['status'] ?? null;
-                }
-
-                // Process each field based on privacy settings
-                foreach ($profile as $field => $value) {
-                    // Skip public fields
-                    if (in_array($field, $publicFields)) {
-                        continue;
-                    }
-
-                    // Process private fields
-                    if (in_array($field, $privateFields)) {
-                        if ($contactStatus !== 'accepted') {
-                            unset($profile[$field]);
-                            continue;
-                        }
-                    }
-
-                    // Process configurable fields
-                    if (isset($privacySettings[$field])) {
-                        if ($privacySettings[$field] === 'private' && $contactStatus !== 'accepted') {
-                            unset($profile[$field]);
-                        }
-                    }
-                }
-
-                // Special handling for profile photo
-                if ($privacySettings['photo'] === 'private' && $contactStatus !== 'accepted') {
-                    $profile['profile_photo'] = null;
-                }
-            }
-            
-            // Increment view count if user is logged in and viewing someone else's profile
-            if ($currentUserId && $currentUserId != $userId) {
+            if ($currentUserId && $currentUserId != $profile['user_id']) {
                 try {
-                    $this->profileModel->incrementViewCount($userId, $currentUserId);
+                    $this->profileModel->incrementViewCount($profile['user_id'], $currentUserId);
                 } catch (Exception $e) {
-                    error_log("Error incrementing view count: " . $e->getMessage());
-                    // Continue execution even if view count fails
+                    error_log('Error incrementing view count: ' . $e->getMessage());
                 }
             }
-            
-            // Get similar profiles
+
             try {
-                $similarProfiles = $this->profileModel->getSimilarProfiles($userId, 6);
+                $similarProfiles = $this->profileModel->getSimilarProfiles($profile['id'], 6);
             } catch (Exception $e) {
-                error_log("Error getting similar profiles: " . $e->getMessage());
+                error_log('Error getting similar profiles: ' . $e->getMessage());
                 $similarProfiles = [];
             }
-            
-            // Calculate age
-            $profile['age'] = $this->calculateAge($profile['date_of_birth']);
-            
-            // Check if profile is in favorites
+
+            $contactStatus = null;
+            if ($currentUserId) {
+                require_once SITE_ROOT . '/app/models/ContactRequestModel.php';
+                $contactModel = new ContactRequestModel();
+                $request = $contactModel->getRequestBetweenUsers($currentUserId, $profile['user_id']);
+                $contactStatus = $request['status'] ?? null;
+            }
+
             $isFavorite = false;
             if ($currentUserId) {
-                try {
-                    require_once SITE_ROOT . '/app/models/FavoriteModel.php';
-                    $favoriteModel = new FavoriteModel();
-                    $isFavorite = $favoriteModel->isFavorite($currentUserId, $userId);
-                } catch (Exception $e) {
-                    error_log("Error checking favorite status: " . $e->getMessage());
-                }
+                require_once SITE_ROOT . '/app/models/FavoriteModel.php';
+                $favoriteModel = new FavoriteModel();
+                $isFavorite = $favoriteModel->isFavorite($currentUserId, $profile['user_id']);
             }
-            
+
             $data = [
-                'title' => $profile['first_name'] . ' ' . $profile['last_name'] . ' - Profile',
-                'profile' => $profile,
-                'similar_profiles' => $similarProfiles,
-                'contact_status' => $contactStatus ?? null,
-                'is_favorite' => $isFavorite,
-                'csrf_token' => $this->generateCsrf(),
-                'scripts' => ['profile-view']
+                'title'             => trim($profile['first_name'] . ' ' . $profile['last_name']) . ' - Profile',
+                'profile'           => $profile,
+                'similar_profiles'  => $similarProfiles,
+                'contact_status'    => $contactStatus,
+                'is_favorite'       => $isFavorite,
+                'csrf_token'        => $this->generateCsrf(),
+                'scripts'           => ['profile-view']
             ];
-            
+
             $this->layout('main', 'profiles/view', $data);
-            
+
         } catch (Exception $e) {
-            error_log("Error in viewProfile: " . $e->getMessage());
+            error_log('Error in viewProfile: ' . $e->getMessage());
             $this->redirectWithMessage('/', 'An error occurred while loading the profile. Please try again later.', 'error');
         }
     }
@@ -438,9 +356,17 @@ class ProfileController extends BaseController {
     }
     
     private function calculateAge($birthDate) {
-        $birth = new DateTime($birthDate);
-        $today = new DateTime();
-        return $today->diff($birth)->y;
+        if (empty($birthDate) || $birthDate === '0000-00-00') {
+            return null;
+        }
+        try {
+            $birth = new DateTime($birthDate);
+            $today = new DateTime();
+            return $today->diff($birth)->y;
+        } catch (Exception $e) {
+            error_log("Error calculating age for date '{$birthDate}': " . $e->getMessage());
+            return null;
+        }
     }
     
     private function analyzeHealthReport($filename) {

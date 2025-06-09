@@ -46,12 +46,13 @@ class ProfileModel extends BaseModel {
     
     public function getProfileWithUser($profileId, $viewerId = null) {
         try {
-            $sql = "SELECT p.*, u.email, u.phone, u.status as user_status, u.created_at as member_since
+            $sql = "SELECT p.*, u.email, u.phone, u.status as user_status, u.created_at as member_since,
+                           TIMESTAMPDIFF(YEAR, p.date_of_birth, CURDATE()) as age
                     FROM {$this->table} p
                     LEFT JOIN users u ON p.user_id = u.id
-                    WHERE p.id = :profile_id";
-            
-            $profile = $this->fetchOne($sql, [':profile_id' => $profileId]);
+                    WHERE p.user_id = :user_id";
+
+            $profile = $this->fetchOne($sql, [':user_id' => $profileId]);
             
             if (!$profile) {
                 error_log("Profile not found: {$profileId}");
@@ -77,17 +78,21 @@ class ProfileModel extends BaseModel {
                 $contactStatus = $contactRequest['status'] ?? null;
             }
 
-            // Apply privacy settings
-            $privacySettings = json_decode($profile['privacy_settings'], true) ?? [
-                'photo' => 'public',
-                'contact' => 'private',
-                'horoscope' => 'private',
-                'income' => 'private',
-                'bio' => 'public',
-                'education' => 'public',
-                'occupation' => 'public',
-                'goals' => 'private'
-            ];
+            // Decode privacy settings safely and apply defaults
+            $rawSettings = $profile['privacy_settings'] ?? '';
+            $privacySettings = json_decode($rawSettings, true);
+            if (!is_array($privacySettings)) {
+                $privacySettings = [
+                    'photo'      => 'public',
+                    'contact'    => 'private',
+                    'horoscope'  => 'private',
+                    'income'     => 'private',
+                    'bio'        => 'public',
+                    'education'  => 'public',
+                    'occupation' => 'public',
+                    'goals'      => 'private'
+                ];
+            }
 
             // Fields that are always public
             $publicFields = [
@@ -324,7 +329,7 @@ class ProfileModel extends BaseModel {
     public function getProfileViews($userId, $days = 30) {
         $profile = $this->findByUserId($userId);
         if (!$profile) return [];
-        
+
         $sql = "SELECT DATE(pv.view_date) as date, SUM(pv.view_count) as views,
                        COUNT(DISTINCT pv.viewer_id) as unique_viewers
                 FROM profile_views pv
@@ -332,12 +337,13 @@ class ProfileModel extends BaseModel {
                 AND pv.view_date >= DATE_SUB(CURDATE(), INTERVAL :days DAY)
                 GROUP BY DATE(pv.view_date)
                 ORDER BY date DESC";
-        
+
         return $this->fetchAll($sql, [
             ':profile_id' => $profile['id'],
             ':days' => $days
         ]);
     }
+
     
     public function updateProfileCompletion($userId) {
         $profile = $this->findByUserId($userId);
@@ -405,6 +411,37 @@ class ProfileModel extends BaseModel {
             ':profile_id' => $profileId,
             ':gender' => $profile['gender'],
             ':limit' => $limit
+        ]);
+    }
+
+    /**
+     * Get recent visitors of a profile.
+     *
+     * @param int $userId
+     * @param int $limit
+     * @return array
+     */
+    public function getRecentVisitors($userId, $limit = 5) {
+        $profile = $this->findByUserId($userId);
+        if (!$profile) {
+            return [];
+        }
+
+        $sql = "SELECT pv.viewer_id AS user_id,
+                       up.first_name, up.last_name, up.profile_photo, up.district,
+                       TIMESTAMPDIFF(YEAR, up.date_of_birth, CURDATE()) AS age,
+                       MAX(pv.view_date) AS last_visit_date
+                FROM profile_views pv
+                LEFT JOIN user_profiles up ON pv.viewer_id = up.user_id
+                LEFT JOIN users u ON pv.viewer_id = u.id
+                WHERE pv.viewed_profile_id = :profile_id AND u.status = 'active'
+                GROUP BY pv.viewer_id
+                ORDER BY last_visit_date DESC
+                LIMIT :limit";
+
+        return $this->fetchAll($sql, [
+            ':profile_id' => $profile['id'],
+            ':limit'      => $limit
         ]);
     }
     
