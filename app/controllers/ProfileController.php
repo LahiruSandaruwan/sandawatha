@@ -46,49 +46,93 @@ class ProfileController extends BaseController {
     
     public function viewProfile($profileId) {
         try {
-            $currentUserId = $_SESSION['user_id'] ?? null;
-
-            $profile = $this->profileModel->getProfileWithUser($profileId, $currentUserId);
-            if (!$profile) {
-                $this->redirectWithMessage('/', 'Profile not found or is not accessible.', 'error');
+            error_log("\n\n=== Start viewProfile ===");
+            error_log("Session data: " . print_r($_SESSION, true));
+            error_log("Request URI: " . $_SERVER['REQUEST_URI']);
+            error_log("Profile ID requested: " . $profileId);
+            
+            // Validate profile ID
+            $profileId = (int)$profileId;
+            if ($profileId <= 0) {
+                error_log("Invalid profile ID: {$profileId}");
+                $this->redirectWithMessage('/', 'Invalid profile ID.', 'error');
                 return;
             }
 
-            if ($currentUserId && $currentUserId == $profile['user_id']) {
+            // Get current user ID from session
+            $currentUserId = $_SESSION['user_id'] ?? null;
+            error_log("Current user ID from session: " . ($currentUserId ?? 'null'));
+            
+            if (!$currentUserId) {
+                error_log("No user logged in, redirecting to login");
+                $this->redirect('/login');
+                return;
+            }
+
+            // If user is trying to view their own profile, redirect to edit
+            if ($currentUserId == $profileId) {
+                error_log("User is viewing their own profile, redirecting to edit");
                 $this->redirect('/profile/edit');
                 return;
             }
 
-            if ($currentUserId && $currentUserId != $profile['user_id']) {
-                try {
-                    $this->profileModel->incrementViewCount($profile['user_id'], $currentUserId);
-                } catch (Exception $e) {
-                    error_log('Error incrementing view count: ' . $e->getMessage());
-                }
+            // Get the requested profile
+            error_log("Fetching profile for ID: {$profileId}");
+            $profile = $this->profileModel->getProfileWithUser($profileId, $currentUserId);
+            error_log("Profile fetch result: " . ($profile ? json_encode($profile, JSON_PRETTY_PRINT) : "Profile not found"));
+
+            // Handle profile not found or not accessible
+            if (!$profile) {
+                error_log("Profile not found or not accessible");
+                $this->redirectWithMessage('/', 'Profile not found or is not accessible.', 'error');
+                return;
             }
 
+            // Track profile view
             try {
-                $similarProfiles = $this->profileModel->getSimilarProfiles($profile['id'], 6);
+                error_log("Recording profile view");
+                $this->profileModel->incrementViewCount($profileId, $currentUserId);
             } catch (Exception $e) {
-                error_log('Error getting similar profiles: ' . $e->getMessage());
-                $similarProfiles = [];
+                error_log("Error recording view: " . $e->getMessage());
+                // Non-critical error, continue without failing
             }
 
+            // Get similar profiles
+            $similarProfiles = [];
+            try {
+                $similarProfiles = $this->profileModel->getSimilarProfiles($profileId, 6);
+                error_log("Found " . count($similarProfiles) . " similar profiles");
+            } catch (Exception $e) {
+                error_log("Error getting similar profiles: " . $e->getMessage());
+                // Non-critical error, continue with empty array
+            }
+
+            // Get contact status
             $contactStatus = null;
-            if ($currentUserId) {
+            try {
                 require_once SITE_ROOT . '/app/models/ContactRequestModel.php';
                 $contactModel = new ContactRequestModel();
-                $request = $contactModel->getRequestBetweenUsers($currentUserId, $profile['user_id']);
+                $request = $contactModel->getRequestBetweenUsers($currentUserId, $profileId);
                 $contactStatus = $request['status'] ?? null;
+                error_log("Contact status: " . ($contactStatus ?? 'none'));
+            } catch (Exception $e) {
+                error_log("Error getting contact status: " . $e->getMessage());
+                // Non-critical error, continue with null status
             }
 
+            // Check if profile is favorited
             $isFavorite = false;
-            if ($currentUserId) {
+            try {
                 require_once SITE_ROOT . '/app/models/FavoriteModel.php';
                 $favoriteModel = new FavoriteModel();
-                $isFavorite = $favoriteModel->isFavorite($currentUserId, $profile['user_id']);
+                $isFavorite = $favoriteModel->isFavorite($currentUserId, $profileId);
+                error_log("Is favorite: " . ($isFavorite ? 'yes' : 'no'));
+            } catch (Exception $e) {
+                error_log("Error checking favorite status: " . $e->getMessage());
+                // Non-critical error, continue with false
             }
 
+            // Prepare view data
             $data = [
                 'title'             => trim($profile['first_name'] . ' ' . $profile['last_name']) . ' - Profile',
                 'profile'           => $profile,
@@ -99,10 +143,12 @@ class ProfileController extends BaseController {
                 'scripts'           => ['profile-view']
             ];
 
+            error_log("Rendering profile view with data: " . print_r($data, true));
             $this->layout('main', 'profiles/view', $data);
 
         } catch (Exception $e) {
-            error_log('Error in viewProfile: ' . $e->getMessage());
+            error_log("Error in viewProfile: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             $this->redirectWithMessage('/', 'An error occurred while loading the profile. Please try again later.', 'error');
         }
     }

@@ -4,16 +4,114 @@ abstract class BaseModel {
     protected $table;
     
     public function __construct() {
-        $database = new Database();
-        $this->db = $database->connect();
+        try {
+            $database = new Database();
+            $this->db = $database->connect();
+            
+            if (!$this->db) {
+                error_log("Failed to establish database connection in " . get_class($this));
+                throw new Exception("Database connection failed");
+            }
+            
+            // Set error mode to throw exceptions
+            $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            
+        } catch (Exception $e) {
+            error_log("Database connection error in " . get_class($this) . ": " . $e->getMessage());
+            throw $e;
+        }
+    }
+    
+    protected function query($sql, $params = []) {
+        try {
+            error_log("\n=== Database Query ===");
+            error_log("SQL: " . $sql);
+            error_log("Parameters: " . json_encode($params));
+            
+            $stmt = $this->execute($sql, $params);
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("Query returned " . count($result) . " rows");
+            return $result;
+        } catch (PDOException $e) {
+            error_log("Database error in query(): " . $e->getMessage());
+            error_log("SQL: " . $sql);
+            error_log("Parameters: " . json_encode($params));
+            error_log("Stack trace: " . $e->getTraceAsString());
+            throw $e;
+        }
+    }
+    
+    protected function execute($sql, $params = []) {
+        try {
+            error_log("\n=== Database Query ===");
+            error_log("SQL: " . $sql);
+            error_log("Parameters: " . json_encode($params));
+            
+            $stmt = $this->db->prepare($sql);
+            
+            foreach ($params as $key => $value) {
+                $type = is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR;
+                error_log("Binding {$key} = " . var_export($value, true) . " (type: {$type})");
+                $stmt->bindValue($key, $value, $type);
+            }
+            
+            $result = $stmt->execute();
+            error_log("Query execution result: " . ($result ? "success" : "failed"));
+            
+            return $stmt;
+        } catch (PDOException $e) {
+            error_log("Database error in execute(): " . $e->getMessage());
+            error_log("SQL: " . $sql);
+            error_log("Parameters: " . json_encode($params));
+            error_log("Stack trace: " . $e->getTraceAsString());
+            throw $e;
+        }
+    }
+    
+    protected function fetchAll($sql, $params = []) {
+        try {
+            error_log("\n=== Database Query (fetchAll) ===");
+            error_log("SQL: " . $sql);
+            error_log("Parameters: " . json_encode($params));
+            
+            $stmt = $this->execute($sql, $params);
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("Query returned " . count($result) . " rows");
+            return $result;
+        } catch (PDOException $e) {
+            error_log("Database error in fetchAll(): " . $e->getMessage());
+            error_log("SQL: " . $sql);
+            error_log("Parameters: " . json_encode($params));
+            error_log("Stack trace: " . $e->getTraceAsString());
+            throw $e;
+        }
+    }
+    
+    protected function fetchOne($sql, $params = []) {
+        try {
+            error_log("\n=== Database Query (fetchOne) ===");
+            error_log("SQL: " . $sql);
+            error_log("Parameters: " . json_encode($params));
+            
+            $stmt = $this->execute($sql, $params);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            error_log("Query returned: " . ($result ? "1 row" : "no rows"));
+            return $result;
+        } catch (PDOException $e) {
+            error_log("Database error in fetchOne(): " . $e->getMessage());
+            error_log("SQL: " . $sql);
+            error_log("Parameters: " . json_encode($params));
+            error_log("Stack trace: " . $e->getTraceAsString());
+            throw $e;
+        }
     }
     
     public function find($id) {
         $sql = "SELECT * FROM {$this->table} WHERE id = :id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetch();
+        return $this->fetchOne($sql, [':id' => $id]);
     }
     
     public function findBy($column, $value) {
@@ -24,10 +122,7 @@ abstract class BaseModel {
         }
         
         $sql = "SELECT * FROM {$this->table} WHERE {$column} = :value";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':value', $value);
-        $stmt->execute();
-        return $stmt->fetch();
+        return $this->fetchOne($sql, [':value' => $value]);
     }
     
     protected function getAllowedColumns() {
@@ -40,17 +135,10 @@ abstract class BaseModel {
         
         if ($limit) {
             $sql .= " LIMIT :limit OFFSET :offset";
+            return $this->fetchAll($sql, [':limit' => $limit, ':offset' => $offset]);
         }
         
-        $stmt = $this->db->prepare($sql);
-        
-        if ($limit) {
-            $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
-            $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-        }
-        
-        $stmt->execute();
-        return $stmt->fetchAll();
+        return $this->fetchAll($sql);
     }
     
     public function create($data) {
@@ -60,13 +148,12 @@ abstract class BaseModel {
         $sql = "INSERT INTO {$this->table} (" . implode(', ', $columns) . ") 
                 VALUES (" . implode(', ', $placeholders) . ")";
         
-        $stmt = $this->db->prepare($sql);
-        
+        $params = [];
         foreach ($data as $key => $value) {
-            $stmt->bindValue(':' . $key, $value);
+            $params[':' . $key] = $value;
         }
         
-        $stmt->execute();
+        $this->execute($sql, $params);
         return $this->db->lastInsertId();
     }
     
@@ -76,21 +163,17 @@ abstract class BaseModel {
         
         $sql = "UPDATE {$this->table} SET " . implode(', ', $setClause) . " WHERE id = :id";
         
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        
+        $params = [':id' => $id];
         foreach ($data as $key => $value) {
-            $stmt->bindValue(':' . $key, $value);
+            $params[':' . $key] = $value;
         }
         
-        return $stmt->execute();
+        return $this->execute($sql, $params);
     }
     
     public function delete($id) {
         $sql = "DELETE FROM {$this->table} WHERE id = :id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        return $stmt->execute();
+        return $this->execute($sql, [':id' => $id]);
     }
     
     public function count($where = null, $params = []) {
@@ -100,41 +183,8 @@ abstract class BaseModel {
             $sql .= " WHERE " . $where;
         }
         
-        $stmt = $this->db->prepare($sql);
-        
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-        
-        $stmt->execute();
-        $result = $stmt->fetch();
+        $result = $this->fetchOne($sql, $params);
         return $result['count'];
-    }
-    
-    protected function query($sql, $params = []) {
-        $stmt = $this->db->prepare($sql);
-        
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-        
-        $stmt->execute();
-        return $stmt;
-    }
-    
-    protected function execute($sql, $params = []) {
-        $stmt = $this->query($sql, $params);
-        return $stmt->rowCount();
-    }
-    
-    protected function fetchAll($sql, $params = []) {
-        $stmt = $this->query($sql, $params);
-        return $stmt->fetchAll();
-    }
-    
-    protected function fetchOne($sql, $params = []) {
-        $stmt = $this->query($sql, $params);
-        return $stmt->fetch();
     }
     
     public function paginate($page = 1, $perPage = 20, $where = null, $params = []) {
@@ -146,17 +196,12 @@ abstract class BaseModel {
         }
         $sql .= " LIMIT :limit OFFSET :offset";
         
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $queryParams = array_merge($params, [
+            ':limit' => $perPage,
+            ':offset' => $offset
+        ]);
         
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-        
-        $stmt->execute();
-        $data = $stmt->fetchAll();
-        
+        $data = $this->fetchAll($sql, $queryParams);
         $totalCount = $this->count($where, $params);
         $totalPages = ceil($totalCount / $perPage);
         

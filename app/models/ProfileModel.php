@@ -44,45 +44,88 @@ class ProfileModel extends BaseModel {
         return $this->execute($sql, $params);
     }
     
-    public function getProfileWithUser($profileId, $viewerId = null) {
+    public function getProfileWithUser($requestedId, $viewerId = null) {
         try {
-            $sql = "SELECT p.*, u.email, u.phone, u.status as user_status, u.created_at as member_since,
-                           TIMESTAMPDIFF(YEAR, p.date_of_birth, CURDATE()) as age
-                    FROM {$this->table} p
-                    LEFT JOIN users u ON p.user_id = u.id
-                    WHERE p.user_id = :user_id";
+            error_log("\n\n=== Start getProfileWithUser ===");
+            error_log("Requested ID: {$requestedId}, Viewer ID: " . ($viewerId ?? 'null'));
 
-            $profile = $this->fetchOne($sql, [':user_id' => $profileId]);
+            // First check if the user exists and is active
+            $userSql = "SELECT id, email, status FROM users WHERE id = :user_id";
+            $userStmt = $this->db->prepare($userSql);
+            $userStmt->bindValue(':user_id', $requestedId, PDO::PARAM_INT);
+            $userStmt->execute();
+            $user = $userStmt->fetch(PDO::FETCH_ASSOC);
+
+            error_log("User check result: " . ($user ? json_encode($user) : "User not found"));
+
+            if (!$user) {
+                error_log("User does not exist with ID: {$requestedId}");
+                return null;
+            }
+
+            if ($user['status'] !== 'active') {
+                error_log("User exists but is not active. Status: " . $user['status']);
+                return null;
+            }
+
+            // Now check if the user has a profile
+            $profileSql = "SELECT * FROM {$this->table} WHERE user_id = :user_id";
+            $profileStmt = $this->db->prepare($profileSql);
+            $profileStmt->bindValue(':user_id', $requestedId, PDO::PARAM_INT);
+            $profileStmt->execute();
+            $basicProfile = $profileStmt->fetch(PDO::FETCH_ASSOC);
+
+            error_log("Basic profile check result: " . ($basicProfile ? json_encode($basicProfile) : "Profile not found"));
+
+            if (!$basicProfile) {
+                error_log("User has no profile. User ID: {$requestedId}");
+                return null;
+            }
+
+            // Now get the full profile data with all necessary information
+            $sql = "SELECT 
+                        p.*,
+                        u.id as user_id,
+                        u.email,
+                        u.phone,
+                        u.status,
+                        u.created_at as member_since,
+                        TIMESTAMPDIFF(YEAR, p.date_of_birth, CURDATE()) as age
+                   FROM users u
+                   INNER JOIN {$this->table} p ON u.id = p.user_id
+                   WHERE u.id = :requested_id";
+
+            error_log("Executing full profile query: " . str_replace(':requested_id', $requestedId, $sql));
             
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':requested_id', $requestedId, PDO::PARAM_INT);
+            $stmt->execute();
+            $profile = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            error_log("Full profile query result: " . ($profile ? json_encode($profile, JSON_PRETTY_PRINT) : "Failed to get full profile"));
+
             if (!$profile) {
-                error_log("Profile not found: {$profileId}");
-                return null;
-            }
-            
-            if ($profile['user_status'] !== 'active') {
-                error_log("Profile {$profileId} found but user is not active. Status: {$profile['user_status']}");
+                error_log("Failed to get full profile data despite user and basic profile existing");
                 return null;
             }
 
-            // If viewer is the profile owner, return full profile
-            if ($viewerId && $viewerId == $profile['user_id']) {
-                return $profile;
-            }
+            error_log("Successfully retrieved profile data: " . json_encode($profile, JSON_PRETTY_PRINT));
 
-            // Check contact status if viewer is provided
+            // Get contact status if viewer is logged in
             $contactStatus = null;
-            if ($viewerId) {
+            if ($viewerId && $viewerId != $requestedId) {  // Only check contact status for other users
                 require_once SITE_ROOT . '/app/models/ContactRequestModel.php';
                 $contactModel = new ContactRequestModel();
-                $contactRequest = $contactModel->getRequestBetweenUsers($viewerId, $profile['user_id']);
+                $contactRequest = $contactModel->getRequestBetweenUsers($viewerId, $requestedId);
                 $contactStatus = $contactRequest['status'] ?? null;
+                error_log("Contact status between {$viewerId} and {$requestedId}: " . ($contactStatus ?? 'none'));
             }
 
-            // Decode privacy settings safely and apply defaults
-            $rawSettings = $profile['privacy_settings'] ?? '';
-            $privacySettings = json_decode($rawSettings, true);
-            if (!is_array($privacySettings)) {
-                $privacySettings = [
+            // Apply privacy settings only when viewing other profiles
+            if ($viewerId != $requestedId) {
+                error_log("Applying privacy settings for viewer {$viewerId}");
+                // Apply privacy settings
+                $defaultPrivacySettings = [
                     'photo'      => 'public',
                     'contact'    => 'private',
                     'horoscope'  => 'private',
@@ -92,54 +135,66 @@ class ProfileModel extends BaseModel {
                     'occupation' => 'public',
                     'goals'      => 'private'
                 ];
-            }
 
-            // Fields that are always public
-            $publicFields = [
-                'id', 'user_id', 'first_name', 'last_name', 'gender',
-                'religion', 'district', 'marital_status', 'height_cm',
-                'view_count', 'profile_completion', 'created_at', 'updated_at'
-            ];
-
-            // Fields that require contact acceptance
-            $privateFields = [
-                'email', 'phone', 'caste', 'city', 'income_lkr',
-                'wants_migration', 'career_focused', 'wants_early_marriage',
-                'horoscope_file'
-            ];
-
-            // Process each field based on privacy settings
-            foreach ($profile as $field => $value) {
-                // Skip public fields
-                if (in_array($field, $publicFields)) {
-                    continue;
-                }
-
-                // Process private fields
-                if (in_array($field, $privateFields)) {
-                    if ($contactStatus !== 'accepted') {
-                        unset($profile[$field]);
-                        continue;
+                $privacySettings = $defaultPrivacySettings;
+                if (!empty($profile['privacy_settings'])) {
+                    try {
+                        $userSettings = json_decode($profile['privacy_settings'], true);
+                        error_log("User privacy settings: " . json_encode($userSettings));
+                        if (is_array($userSettings)) {
+                            $privacySettings = array_merge($defaultPrivacySettings, $userSettings);
+                        }
+                    } catch (Exception $e) {
+                        error_log("Error parsing privacy settings: " . $e->getMessage());
                     }
                 }
 
-                // Process configurable fields
-                if (isset($privacySettings[$field])) {
-                    if ($privacySettings[$field] === 'private' && $contactStatus !== 'accepted') {
-                        unset($profile[$field]);
+                error_log("Final privacy settings: " . json_encode($privacySettings));
+
+                // Apply privacy filters if not a contact
+                if ($contactStatus !== 'accepted') {
+                    error_log("Applying privacy filters - not an accepted contact");
+                    foreach ($privacySettings as $field => $visibility) {
+                        if ($visibility === 'private') {
+                            switch ($field) {
+                                case 'photo':
+                                    $profile['profile_photo'] = null;
+                                    break;
+                                case 'contact':
+                                    $profile['email'] = null;
+                                    $profile['phone'] = null;
+                                    break;
+                                case 'horoscope':
+                                    $profile['horoscope_file'] = null;
+                                    break;
+                                case 'income':
+                                    $profile['income_lkr'] = null;
+                                    break;
+                                case 'bio':
+                                    $profile['bio'] = null;
+                                    break;
+                                case 'education':
+                                    $profile['education'] = null;
+                                    break;
+                                case 'occupation':
+                                    $profile['occupation'] = null;
+                                    break;
+                                case 'goals':
+                                    $profile['goals'] = null;
+                                    break;
+                            }
+                        }
                     }
                 }
             }
 
-            // Special handling for profile photo
-            if ($privacySettings['photo'] === 'private' && $contactStatus !== 'accepted') {
-                $profile['profile_photo'] = null;
-            }
-            
+            error_log("Final profile data being returned: " . json_encode($profile, JSON_PRETTY_PRINT));
             return $profile;
+
         } catch (Exception $e) {
-            error_log("Error fetching profile {$profileId}: " . $e->getMessage());
-            throw $e;
+            error_log("Error in getProfileWithUser: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return null;
         }
     }
     
