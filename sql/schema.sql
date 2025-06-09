@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     health_report VARCHAR(255),
     view_count INT DEFAULT 0,
     profile_completion INT DEFAULT 0,
+    privacy_settings JSON NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

@@ -7,8 +7,8 @@
         <div class="col-lg-4 mb-4">
             <div class="card">
                 <div class="position-relative">
-                    <img src="<?= $profile['profile_photo'] ? UPLOAD_URL . $profile['profile_photo'] : BASE_URL . '/assets/images/default-profile.jpg' ?>" 
-                         class="card-img-top profile-image" alt="Profile Photo">
+                    <?php $photoUrl = $profile['profile_photo'] ? UPLOAD_URL . $profile['profile_photo'] : BASE_URL . '/assets/images/default-profile.jpg'; ?>
+                    <img src="<?= $photoUrl ?>" class="card-img-top profile-image" alt="Profile Photo">
                     <?php if (isset($profile['online_status']) && $profile['online_status'] === 'online'): ?>
                         <span class="badge bg-success position-absolute top-0 end-0 m-2">Online</span>
                     <?php endif; ?>
@@ -34,13 +34,14 @@
                                     <i class="bi bi-clock"></i> Contact Request Pending
                                 </button>
                             <?php else: ?>
-                                <button class="btn btn-primary" onclick="sendContactRequest(<?= $profile['user_id'] ?>)">
+                                <button class="btn btn-primary send-contact-request" data-user-id="<?= $profile['user_id'] ?>" data-csrf="<?= $csrf_token ?>">
                                     <i class="bi bi-envelope"></i> Send Contact Request
                                 </button>
                             <?php endif; ?>
                             
-                            <button class="btn <?= $is_favorite ? 'btn-danger' : 'btn-outline-danger' ?>" 
-                                    onclick="toggleFavorite(<?= $profile['user_id'] ?>)">
+                            <button class="btn <?= $is_favorite ? 'btn-danger' : 'btn-outline-danger' ?> toggle-favorite" 
+                                    data-user-id="<?= $profile['user_id'] ?>" 
+                                    data-csrf="<?= $csrf_token ?>">
                                 <i class="bi bi-heart<?= $is_favorite ? '-fill' : '' ?>"></i> 
                                 <?= $is_favorite ? 'Remove from Favorites' : 'Add to Favorites' ?>
                             </button>
@@ -70,7 +71,7 @@
                         </li>
                         <li class="mb-2">
                             <i class="bi bi-book me-2"></i> <?= htmlspecialchars($profile['religion']) ?>
-                            <?php if (isset($profile['caste'])): ?>
+                            <?php if (isset($profile['caste']) && $profile['caste']): ?>
                                 - <?= htmlspecialchars($profile['caste']) ?>
                             <?php endif; ?>
                         </li>
@@ -90,7 +91,7 @@
                     <h5 class="card-title mb-0">About Me</h5>
                 </div>
                 <div class="card-body">
-                    <?php if (isset($profile['bio'])): ?>
+                    <?php if (isset($profile['bio']) && $profile['bio']): ?>
                         <p class="card-text"><?= nl2br(htmlspecialchars($profile['bio'])) ?></p>
                     <?php else: ?>
                         <p class="text-muted">No bio available.</p>
@@ -107,13 +108,13 @@
                     <div class="row">
                         <div class="col-md-6">
                             <h6>Education</h6>
-                            <p><?= htmlspecialchars($profile['education']) ?></p>
+                            <p><?= isset($profile['education']) && $profile['education'] ? htmlspecialchars($profile['education']) : 'Not specified' ?></p>
                         </div>
                         <div class="col-md-6">
                             <h6>Occupation</h6>
-                            <p><?= isset($profile['occupation']) ? htmlspecialchars($profile['occupation']) : 'Not specified' ?></p>
+                            <p><?= isset($profile['occupation']) && $profile['occupation'] ? htmlspecialchars($profile['occupation']) : 'Not specified' ?></p>
                             
-                            <?php if (isset($profile['income_lkr'])): ?>
+                            <?php if (isset($profile['income_lkr']) && $profile['income_lkr']): ?>
                                 <h6>Monthly Income</h6>
                                 <p>LKR <?= number_format($profile['income_lkr']) ?></p>
                             <?php endif; ?>
@@ -129,37 +130,45 @@
                     <h5 class="card-title mb-0">Goals & Preferences</h5>
                 </div>
                 <div class="card-body">
-                    <?php if (isset($profile['goals'])): ?>
+                    <?php if (isset($profile['goals']) && $profile['goals']): ?>
                         <h6>Life Goals</h6>
                         <p><?= nl2br(htmlspecialchars($profile['goals'])) ?></p>
                     <?php endif; ?>
                     
                     <div class="row mt-3">
+                        <?php if (isset($profile['wants_migration'])): ?>
                         <div class="col-md-4">
                             <div class="d-flex align-items-center">
                                 <i class="bi <?= $profile['wants_migration'] ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger' ?> me-2"></i>
                                 <span>Interested in Migration</span>
                             </div>
                         </div>
+                        <?php endif; ?>
+                        
+                        <?php if (isset($profile['career_focused'])): ?>
                         <div class="col-md-4">
                             <div class="d-flex align-items-center">
                                 <i class="bi <?= $profile['career_focused'] ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger' ?> me-2"></i>
                                 <span>Career Focused</span>
                             </div>
                         </div>
+                        <?php endif; ?>
+                        
+                        <?php if (isset($profile['wants_early_marriage'])): ?>
                         <div class="col-md-4">
                             <div class="d-flex align-items-center">
                                 <i class="bi <?= $profile['wants_early_marriage'] ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger' ?> me-2"></i>
                                 <span>Prefers Early Marriage</span>
                             </div>
                         </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
             <?php endif; ?>
             
             <!-- Horoscope -->
-            <?php if (isset($profile['horoscope_file'])): ?>
+            <?php if (isset($profile['horoscope_file']) && $profile['horoscope_file']): ?>
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="card-title mb-0">Horoscope</h5>
@@ -183,8 +192,8 @@
                 <?php foreach ($similar_profiles as $similar): ?>
                     <div class="col-md-3 mb-4">
                         <div class="card h-100">
-                            <img src="<?= $similar['profile_photo'] ? UPLOAD_URL . $similar['profile_photo'] : BASE_URL . '/assets/images/default-profile.jpg' ?>" 
-                                 class="card-img-top" alt="Profile Photo">
+                            <?php $similarPhotoUrl = $similar['profile_photo'] ? UPLOAD_URL . $similar['profile_photo'] : BASE_URL . '/assets/images/default-profile.jpg'; ?>
+                            <img src="<?= $similarPhotoUrl ?>" class="card-img-top" alt="Profile Photo">
                             <div class="card-body">
                                 <h5 class="card-title"><?= htmlspecialchars($similar['first_name']) ?></h5>
                                 <p class="card-text">
@@ -234,4 +243,76 @@
             </div>
         </div>
     </div>
-</div> 
+</div>
+
+<!-- JavaScript for handling contact requests and favorites -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Send Contact Request
+    document.querySelectorAll('.send-contact-request').forEach(button => {
+        button.addEventListener('click', async function() {
+            const userId = this.dataset.userId;
+            const csrfToken = this.dataset.csrf;
+            
+            try {
+                const response = await fetch(`${BASE_URL}/contact-request/send`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `user_id=${userId}&csrf_token=${csrfToken}`
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    this.classList.replace('btn-primary', 'btn-warning');
+                    this.disabled = true;
+                    this.innerHTML = '<i class="bi bi-clock"></i> Contact Request Pending';
+                    showToast('success', 'Contact request sent successfully');
+                } else {
+                    showToast('error', result.message || 'Failed to send contact request');
+                }
+            } catch (error) {
+                showToast('error', 'An error occurred. Please try again.');
+            }
+        });
+    });
+    
+    // Toggle Favorite
+    document.querySelectorAll('.toggle-favorite').forEach(button => {
+        button.addEventListener('click', async function() {
+            const userId = this.dataset.userId;
+            const csrfToken = this.dataset.csrf;
+            const isFavorite = this.classList.contains('btn-danger');
+            
+            try {
+                const response = await fetch(`${BASE_URL}/favorites/${isFavorite ? 'remove' : 'add'}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `user_id=${userId}&csrf_token=${csrfToken}`
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    if (isFavorite) {
+                        this.classList.replace('btn-danger', 'btn-outline-danger');
+                        this.querySelector('i').classList.replace('bi-heart-fill', 'bi-heart');
+                        this.innerHTML = '<i class="bi bi-heart"></i> Add to Favorites';
+                    } else {
+                        this.classList.replace('btn-outline-danger', 'btn-danger');
+                        this.querySelector('i').classList.replace('bi-heart', 'bi-heart-fill');
+                        this.innerHTML = '<i class="bi bi-heart-fill"></i> Remove from Favorites';
+                    }
+                    showToast('success', result.message);
+                } else {
+                    showToast('error', result.message || 'Failed to update favorites');
+                }
+            } catch (error) {
+                showToast('error', 'An error occurred. Please try again.');
+            }
+        });
+    });
+});
+</script> 

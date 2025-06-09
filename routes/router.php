@@ -23,10 +23,21 @@ class Router {
         $this->addRoute('GET', '/reset-password', 'AuthController', 'resetPasswordForm');
         $this->addRoute('POST', '/reset-password', 'AuthController', 'resetPassword');
         
-        // Profile browsing (public)
+        // Public browsing and search
         $this->addRoute('GET', '/browse', 'ProfileController', 'browse');
-        $this->addRoute('GET', '/profile/(\d+)', 'ProfileController', 'viewProfile');
         $this->addRoute('POST', '/search', 'ProfileController', 'search');
+        
+        // Protected routes (require authentication)
+        $this->addRoute('GET', '/dashboard', 'DashboardController', 'index', ['auth']);
+        
+        // Profile routes (all require auth)
+        $this->addRoute('GET', '/profile/edit', 'ProfileController', 'edit', ['auth']);
+        $this->addRoute('POST', '/profile/update', 'ProfileController', 'update', ['auth']);
+        $this->addRoute('POST', '/profile/upload-photo', 'ProfileController', 'uploadPhoto', ['auth']);
+        $this->addRoute('POST', '/profile/upload-horoscope', 'ProfileController', 'uploadHoroscope', ['auth']);
+        $this->addRoute('POST', '/profile/search', 'ProfileController', 'search', ['auth']);
+        $this->addRoute('GET', '/profile/(\d+)', 'ProfileController', 'viewProfile', ['auth']);
+        $this->addRoute('GET', '/profile', 'ProfileController', 'index', ['auth']);
         
         // Newsletter and feedback
         $this->addRoute('POST', '/newsletter/subscribe', 'NewsletterController', 'subscribe');
@@ -39,15 +50,6 @@ class Router {
         $this->addRoute('GET', '/about', 'PageController', 'about');
         $this->addRoute('GET', '/contact', 'PageController', 'contact');
         $this->addRoute('POST', '/toggle-dark-mode', 'PageController', 'toggleDarkMode');
-        
-        // Protected routes (require authentication)
-        $this->addRoute('GET', '/dashboard', 'DashboardController', 'index', ['auth']);
-        $this->addRoute('GET', '/profile', 'ProfileController', 'index', ['auth']);
-        $this->addRoute('GET', '/profile/edit', 'ProfileController', 'edit', ['auth']);
-        $this->addRoute('POST', '/profile/update', 'ProfileController', 'update', ['auth']);
-        $this->addRoute('POST', '/profile/upload-photo', 'ProfileController', 'uploadPhoto', ['auth']);
-        $this->addRoute('POST', '/profile/upload-horoscope', 'ProfileController', 'uploadHoroscope', ['auth']);
-        $this->addRoute('POST', '/profile/search', 'ProfileController', 'search', ['auth']);
         
         // Contact requests
         $this->addRoute('POST', '/contact-request/send', 'ContactController', 'send', ['auth']);
