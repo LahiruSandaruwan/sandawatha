@@ -9,10 +9,18 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- Font Awesome (for wedding couple icons in Success Stories) -->
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link href="<?= BASE_URL ?>/assets/css/style.css" rel="stylesheet">
+    
+    <!-- Common CSS -->
+    <link href="<?= BASE_URL ?>/assets/css/common/common.css" rel="stylesheet">
+    
+    <!-- Component CSS -->
+    <?php if (isset($component_css)): ?>
+        <?php foreach ($component_css as $css): ?>
+            <link href="<?= BASE_URL ?>/assets/css/<?= $css ?>.css" rel="stylesheet">
+        <?php endforeach; ?>
+    <?php endif; ?>
     
     <!-- Meta tags -->
     <meta name="description" content="<?= $description ?? 'Find your perfect life partner in Sri Lanka. Join thousands of verified profiles on Sandawatha.lk - the most trusted matrimonial platform.' ?>">
@@ -212,10 +220,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <!-- Custom JS -->
-    <script src="<?= BASE_URL ?>/assets/js/app.js" defer></script>
     
-    <!-- Page specific scripts -->
+    <!-- Common JS -->
+    <script src="<?= BASE_URL ?>/assets/js/common/app.js" defer></script>
+    
+    <!-- Component JS -->
     <?php if (isset($scripts)): ?>
         <?php foreach ($scripts as $script): ?>
             <script src="<?= BASE_URL ?>/assets/js/<?= $script ?>.js" defer></script>

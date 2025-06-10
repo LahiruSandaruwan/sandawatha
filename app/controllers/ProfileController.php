@@ -38,7 +38,8 @@ class ProfileController extends BaseController {
             'stats' => $stats,
             'filters' => $filters,
             'current_page' => $page,
-            'scripts' => ['search']
+            'component_css' => ['search/search'],
+            'scripts' => ['search/search']
         ];
         
         $this->layout('main', 'profiles/browse', $data);
@@ -62,26 +63,21 @@ class ProfileController extends BaseController {
             error_log("Current viewer ID: " . ($viewerId ?? 'not logged in'));
             
             $profile = $this->profileModel->getProfileWithUser($userId, $viewerId);
-
+            
             if (!$profile) {
-                error_log("No profile found for user ID: " . $userId);
+                error_log("No profile found for ID: " . $userId);
                 $this->redirectWithMessage('/', 'Profile not found', 'error');
                 return;
             }
 
-            error_log("Profile found: " . json_encode($profile));
-
             // Get contact status if user is logged in
             $contactStatus = null;
-            if ($viewerId && $viewerId !== (int)$userId) {
+            if ($viewerId) {
                 require_once SITE_ROOT . '/app/models/ContactRequestModel.php';
                 $contactModel = new ContactRequestModel();
-                $request = $contactModel->getRequestBetweenUsers($viewerId, $userId);
-                $contactStatus = $request ? $request['status'] : null;
-                error_log("Contact status between viewer {$viewerId} and user {$userId}: " . ($contactStatus ?? 'none'));
+                $contactStatus = $contactModel->getRequestBetweenUsers($viewerId, $userId);
             }
 
-            // Prepare data for view
             $data = [
                 'profile' => $profile,
                 'title' => $profile['first_name'] . "'s Profile - Sandawatha.lk",
@@ -89,7 +85,9 @@ class ProfileController extends BaseController {
                 'isOwnProfile' => $viewerId === (int)$userId,
                 'is_favorite' => $profile['is_favorite'] ?? false,
                 'contact_status' => $contactStatus,
-                'csrf_token' => $this->generateCsrf()
+                'csrf_token' => $this->generateCsrf(),
+                'component_css' => ['profile/profile'],
+                'scripts' => ['profile/profile-view']
             ];
 
             error_log("Rendering profile view with data: " . json_encode($data));
@@ -119,7 +117,8 @@ class ProfileController extends BaseController {
             'religions' => $this->getReligions(),
             'castes' => $this->getCastes(),
             'education_levels' => $this->getEducationLevels(),
-            'scripts' => ['profile-edit']
+            'component_css' => ['profile/profile'],
+            'scripts' => ['profile/profile-edit']
         ];
         
         $this->layout('main', 'profiles/edit', $data);

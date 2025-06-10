@@ -26,23 +26,27 @@ class MessageController extends BaseController {
         $sentMessages = [];
         $adminMessages = [];
         $conversations = [];
+        $stats = [];
+        $unreadCount = 0;
         
-        if ($tab === 'inbox') {
-            if ($search) {
-                $messages = $this->messageModel->searchMessages($currentUser['id'], $search, $page, 20);
-            } else {
-                $messages = $this->messageModel->getInbox($currentUser['id'], $page, 20);
-            }
-        } elseif ($tab === 'sent') {
-            $sentMessages = $this->messageModel->getSentMessages($currentUser['id'], $page, 20);
-        } elseif ($tab === 'admin') {
+        if ($tab === 'inbox' || $tab === 'all') {
+            $messages = $this->messageModel->getInboxMessages($currentUser['id'], $page, 20, $search);
+            $unreadCount = $this->messageModel->getUnreadCount($currentUser['id']);
+        }
+        
+        if ($tab === 'sent' || $tab === 'all') {
+            $sentMessages = $this->messageModel->getSentMessages($currentUser['id'], $page, 20, $search);
+        }
+        
+        if ($tab === 'admin' || $tab === 'all') {
             $adminMessages = $this->messageModel->getAdminMessages($currentUser['id'], $page, 20);
-        } elseif ($tab === 'conversations') {
-            $conversations = $this->messageModel->getRecentConversations($currentUser['id'], 20);
+        }
+        
+        if ($tab === 'conversations') {
+            $conversations = $this->messageModel->getConversations($currentUser['id'], $page, 20);
         }
         
         $stats = $this->messageModel->getMessageStats($currentUser['id']);
-        $unreadCount = $this->messageModel->getUnreadCount($currentUser['id']);
         
         $data = [
             'title' => 'Messages - Sandawatha.lk',
@@ -56,7 +60,8 @@ class MessageController extends BaseController {
             'current_page' => $page,
             'search_query' => $search,
             'csrf_token' => $this->generateCsrf(),
-            'scripts' => ['messages']
+            'component_css' => ['chat/chat'],
+            'scripts' => ['chat/messages']
         ];
         
         $this->layout('main', 'messages/inbox', $data);
@@ -82,7 +87,8 @@ class MessageController extends BaseController {
             'main_message' => $mainMessage,
             'current_user_id' => $currentUser['id'],
             'csrf_token' => $this->generateCsrf(),
-            'scripts' => ['message-view']
+            'component_css' => ['chat/chat'],
+            'scripts' => ['chat/message-view']
         ];
         
         $this->layout('main', 'messages/view', $data);

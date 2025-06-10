@@ -63,7 +63,8 @@ class DashboardController extends BaseController {
             'premium_membership' => $premium_membership,
             'premium_features'   => $premium_features,
             'csrf_token'         => $this->generateCsrf(),
-            'scripts'            => ['dashboard']
+            'component_css'      => ['dashboard/dashboard'],
+            'scripts'           => ['dashboard/dashboard']
         ];
         
         $this->layout('main', 'dashboard/index', $data);

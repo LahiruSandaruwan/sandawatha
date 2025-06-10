@@ -42,7 +42,8 @@ class HomeController extends BaseController {
             'district_stats' => $districtStats,
             'religion_stats' => $religionStats,
             'csrf_token' => $this->generateCsrf(),
-            'scripts' => ['homepage']
+            'component_css' => ['home/home'],
+            'scripts' => ['home/homepage']
         ];
         
         $this->layout('main', 'home/index', $data);
