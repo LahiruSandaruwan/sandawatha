@@ -1,6 +1,7 @@
 <?php
 class Database {
     private $host = '127.0.0.1';
+    private $port = '3306';
     private $db_name = 'sandawatha_lk';
     private $username = 'root';
     private $password = '';
@@ -10,7 +11,7 @@ class Database {
     public function connect() {
         if ($this->pdo === null) {
             try {
-                $dsn = "mysql:host={$this->host};dbname={$this->db_name};charset={$this->charset}";
+                $dsn = "mysql:host={$this->host};port={$this->port};dbname={$this->db_name};charset={$this->charset}";
                 $options = [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -19,6 +20,7 @@ class Database {
                 
                 $this->pdo = new PDO($dsn, $this->username, $this->password, $options);
             } catch (PDOException $e) {
+                error_log("Database connection error: " . $e->getMessage());
                 throw new Exception("Database connection failed: " . $e->getMessage());
             }
         }

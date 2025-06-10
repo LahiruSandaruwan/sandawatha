@@ -47,28 +47,38 @@ class ProfileController extends BaseController {
     public function viewProfile() {
         try {
             $urlParams = $this->getUrlParameters();
-            $profileId = isset($urlParams[0]) ? (int)$urlParams[0] : null;
+            $userId = isset($urlParams[0]) ? (int)$urlParams[0] : null;
             
-            if (!$profileId) {
-                $this->redirectWithMessage('/home', 'Profile not found', 'error');
+            error_log("ViewProfile called with URL parameters: " . json_encode($urlParams));
+            error_log("Extracted user ID: " . $userId);
+            
+            if (!$userId) {
+                error_log("No user ID found in URL parameters");
+                $this->redirectWithMessage('/', 'Profile not found', 'error');
                 return;
             }
 
             $viewerId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
-            $profile = $this->profileModel->getProfileWithUser($profileId, $viewerId);
+            error_log("Current viewer ID: " . ($viewerId ?? 'not logged in'));
+            
+            $profile = $this->profileModel->getProfileWithUser($userId, $viewerId);
 
             if (!$profile) {
-                $this->redirectWithMessage('/home', 'Profile not found', 'error');
+                error_log("No profile found for user ID: " . $userId);
+                $this->redirectWithMessage('/', 'Profile not found', 'error');
                 return;
             }
 
+            error_log("Profile found: " . json_encode($profile));
+
             // Get contact status if user is logged in
             $contactStatus = null;
-            if ($viewerId && $viewerId !== (int)$profileId) {
+            if ($viewerId && $viewerId !== (int)$userId) {
                 require_once SITE_ROOT . '/app/models/ContactRequestModel.php';
                 $contactModel = new ContactRequestModel();
-                $request = $contactModel->getRequestBetweenUsers($viewerId, $profileId);
+                $request = $contactModel->getRequestBetweenUsers($viewerId, $userId);
                 $contactStatus = $request ? $request['status'] : null;
+                error_log("Contact status between viewer {$viewerId} and user {$userId}: " . ($contactStatus ?? 'none'));
             }
 
             // Prepare data for view
@@ -76,17 +86,19 @@ class ProfileController extends BaseController {
                 'profile' => $profile,
                 'title' => $profile['first_name'] . "'s Profile - Sandawatha.lk",
                 'description' => "View {$profile['first_name']}'s profile on Sandawatha.lk - Sri Lanka's trusted matrimonial platform",
-                'isOwnProfile' => $viewerId === (int)$profileId,
+                'isOwnProfile' => $viewerId === (int)$userId,
                 'is_favorite' => $profile['is_favorite'] ?? false,
                 'contact_status' => $contactStatus,
                 'csrf_token' => $this->generateCsrf()
             ];
 
+            error_log("Rendering profile view with data: " . json_encode($data));
             $this->layout('main', 'profiles/view', $data);
 
         } catch (Exception $e) {
             error_log("Error in viewProfile: " . $e->getMessage());
-            $this->redirectWithMessage('/home', 'An error occurred while loading the profile', 'error');
+            error_log("Stack trace: " . $e->getTraceAsString());
+            $this->redirectWithMessage('/', 'An error occurred while loading the profile', 'error');
         }
     }
     

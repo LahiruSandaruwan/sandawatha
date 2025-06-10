@@ -44,7 +44,7 @@ class ProfileModel extends BaseModel {
         return $this->execute($sql, $params);
     }
     
-    public function getProfileWithUser($profileId, $viewerId = null) {
+    public function getProfileWithUser($userId, $viewerId = null) {
         try {
             // Single optimized query to get all necessary data
             $sql = "SELECT 
@@ -62,10 +62,10 @@ class ProfileModel extends BaseModel {
                 LEFT JOIN contact_requests cr ON 
                     ((cr.sender_id = :viewer_id2 AND cr.receiver_id = up.user_id) OR 
                      (cr.sender_id = up.user_id AND cr.receiver_id = :viewer_id3))
-                WHERE up.user_id = :profile_id AND u.status = 'active'";
+                WHERE up.user_id = :user_id AND u.status = 'active'";
 
             $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':profile_id', $profileId, PDO::PARAM_INT);
+            $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
             $stmt->bindValue(':viewer_id1', $viewerId, PDO::PARAM_INT);
             $stmt->bindValue(':viewer_id2', $viewerId, PDO::PARAM_INT);
             $stmt->bindValue(':viewer_id3', $viewerId, PDO::PARAM_INT);
@@ -89,7 +89,7 @@ class ProfileModel extends BaseModel {
             ];
 
             // If it's the profile owner or an admin
-            if ($viewerId && ($viewerId === (int)$profileId || $profile['role'] === 'admin')) {
+            if ($viewerId && ($viewerId === (int)$userId || $profile['role'] === 'admin')) {
                 return array_merge($profile, [
                     'is_favorite' => $profile['is_favorite'],
                     'contact_status' => $profile['contact_status']

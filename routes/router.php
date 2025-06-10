@@ -124,6 +124,8 @@ class Router {
             $requestUri = '/';
         }
         
+        error_log("Router: Processing request for {$requestMethod} {$requestUri}");
+        
         foreach ($this->routes as $route) {
             if ($route['method'] !== $requestMethod) {
                 continue;
@@ -133,11 +135,16 @@ class Router {
             $pattern = str_replace('/', '\/', $route['pattern']);
             $pattern = '#^' . $pattern . '$#';
             
+            error_log("Router: Testing pattern {$pattern} against {$requestUri}");
+            
             if (preg_match($pattern, $requestUri, $matches)) {
                 array_shift($matches); // Remove full match
                 
+                error_log("Router: Route matched! Controller: {$route['controller']}, Action: {$route['action']}, Params: " . json_encode($matches));
+                
                 // Check middlewares
                 if (!$this->checkMiddlewares($route['middlewares'])) {
+                    error_log("Router: Middleware check failed");
                     return;
                 }
                 
@@ -147,6 +154,7 @@ class Router {
                 // Load and instantiate controller
                 $controllerFile = SITE_ROOT . '/app/controllers/' . $controllerName . '.php';
                 if (!file_exists($controllerFile)) {
+                    error_log("Router: Controller file not found: {$controllerFile}");
                     $this->show404();
                     return;
                 }
@@ -154,6 +162,7 @@ class Router {
                 require_once $controllerFile;
                 
                 if (!class_exists($controllerName)) {
+                    error_log("Router: Controller class not found: {$controllerName}");
                     $this->show404();
                     return;
                 }
@@ -161,34 +170,45 @@ class Router {
                 $controller = new $controllerName();
                 
                 if (!method_exists($controller, $actionName)) {
+                    error_log("Router: Action method not found: {$actionName}");
                     $this->show404();
                     return;
                 }
                 
                 // Call the action with matches as parameters
+                error_log("Router: Calling {$controllerName}::{$actionName} with params: " . json_encode($matches));
                 call_user_func_array([$controller, $actionName], $matches);
                 return;
             }
         }
         
+        error_log("Router: No matching route found for {$requestUri}");
         $this->show404();
     }
     
     private function checkMiddlewares($middlewares) {
+        error_log("Router: Checking middlewares: " . json_encode($middlewares));
+        
         foreach ($middlewares as $middleware) {
+            error_log("Router: Processing middleware: {$middleware}");
+            
             switch ($middleware) {
                 case 'auth':
                     if (!isset($_SESSION['user_id'])) {
+                        error_log("Router: Auth middleware failed - user not logged in");
                         header('Location: ' . BASE_URL . '/login');
                         exit;
                     }
+                    error_log("Router: Auth middleware passed");
                     break;
                     
                 case 'admin':
                     if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+                        error_log("Router: Admin middleware failed - user not admin");
                         header('Location: ' . BASE_URL . '/dashboard');
                         exit;
                     }
+                    error_log("Router: Admin middleware passed");
                     break;
                     
                 case 'premium':
@@ -196,19 +216,24 @@ class Router {
                     require_once SITE_ROOT . '/app/models/PremiumModel.php';
                     $premiumModel = new PremiumModel();
                     if (!$premiumModel->hasActivePremium($_SESSION['user_id'])) {
+                        error_log("Router: Premium middleware failed - user not premium");
                         header('Location: ' . BASE_URL . '/premium');
                         exit;
                     }
+                    error_log("Router: Premium middleware passed");
                     break;
                     
                 case 'guest':
                     if (isset($_SESSION['user_id'])) {
+                        error_log("Router: Guest middleware failed - user already logged in");
                         header('Location: ' . BASE_URL . '/dashboard');
                         exit;
                     }
+                    error_log("Router: Guest middleware passed");
                     break;
             }
         }
+        error_log("Router: All middlewares passed");
         return true;
     }
     

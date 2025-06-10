@@ -29,13 +29,15 @@ class ContactRequestModel extends BaseModel {
     
     public function getRequestBetweenUsers($userId1, $userId2) {
         $sql = "SELECT * FROM contact_requests 
-                WHERE (sender_id = :user1 AND receiver_id = :user2)
-                OR (sender_id = :user2 AND receiver_id = :user1)
+                WHERE (sender_id = :sender1 AND receiver_id = :receiver1)
+                OR (sender_id = :sender2 AND receiver_id = :receiver2)
                 ORDER BY sent_at DESC LIMIT 1";
         
         $params = [
-            ':user1' => $userId1,
-            ':user2' => $userId2
+            ':sender1' => $userId1,
+            ':receiver1' => $userId2,
+            ':sender2' => $userId2,
+            ':receiver2' => $userId1
         ];
         
         return $this->fetchOne($sql, $params);

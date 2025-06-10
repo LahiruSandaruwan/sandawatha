@@ -77,6 +77,10 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Error logging
+ini_set('log_errors', 1);
+ini_set('error_log', SITE_ROOT . '/logs/php_errors.log');
+
 // Timezone
 date_default_timezone_set('Asia/Colombo');
 
