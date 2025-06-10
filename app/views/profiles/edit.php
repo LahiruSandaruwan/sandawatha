@@ -196,112 +196,198 @@
             </div>
 
             <div class="card mt-3">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Privacy Settings</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#privacyHelpModal">
+                        <i class="bi bi-question-circle"></i> Help
+                    </button>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted mb-3">Control who can see your profile information</p>
+                    <p class="text-muted mb-4">Control who can see your profile information</p>
                     
                     <?php
                     $privacySettings = json_decode($profile['privacy_settings'] ?? '{}', true) ?? [
-                        'photo' => 'public',
+                        'default' => 'registered',
+                        'photo' => 'registered',
                         'contact' => 'private',
                         'horoscope' => 'private',
                         'income' => 'private',
-                        'bio' => 'public',
-                        'education' => 'public',
-                        'occupation' => 'public',
-                        'goals' => 'private'
+                        'bio' => 'registered',
+                        'education' => 'registered',
+                        'occupation' => 'registered',
+                        'goals' => 'registered'
                     ];
                     ?>
-                    
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Information</th>
-                                    <th>Visibility</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Profile Photo</td>
-                                    <td>
-                                        <select class="form-select form-select-sm" name="privacy_settings[photo]">
-                                            <option value="public" <?= ($privacySettings['photo'] ?? '') === 'public' ? 'selected' : '' ?>>Public</option>
-                                            <option value="private" <?= ($privacySettings['photo'] ?? '') === 'private' ? 'selected' : '' ?>>After Contact</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Contact Information</td>
-                                    <td>
-                                        <select class="form-select form-select-sm" name="privacy_settings[contact]">
-                                            <option value="public" <?= ($privacySettings['contact'] ?? '') === 'public' ? 'selected' : '' ?>>Public</option>
-                                            <option value="private" <?= ($privacySettings['contact'] ?? '') === 'private' ? 'selected' : '' ?>>After Contact</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Horoscope</td>
-                                    <td>
-                                        <select class="form-select form-select-sm" name="privacy_settings[horoscope]">
-                                            <option value="public" <?= ($privacySettings['horoscope'] ?? '') === 'public' ? 'selected' : '' ?>>Public</option>
-                                            <option value="private" <?= ($privacySettings['horoscope'] ?? '') === 'private' ? 'selected' : '' ?>>After Contact</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Income</td>
-                                    <td>
-                                        <select class="form-select form-select-sm" name="privacy_settings[income]">
-                                            <option value="public" <?= ($privacySettings['income'] ?? '') === 'public' ? 'selected' : '' ?>>Public</option>
-                                            <option value="private" <?= ($privacySettings['income'] ?? '') === 'private' ? 'selected' : '' ?>>After Contact</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Bio</td>
-                                    <td>
-                                        <select class="form-select form-select-sm" name="privacy_settings[bio]">
-                                            <option value="public" <?= ($privacySettings['bio'] ?? '') === 'public' ? 'selected' : '' ?>>Public</option>
-                                            <option value="private" <?= ($privacySettings['bio'] ?? '') === 'private' ? 'selected' : '' ?>>After Contact</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Education</td>
-                                    <td>
-                                        <select class="form-select form-select-sm" name="privacy_settings[education]">
-                                            <option value="public" <?= ($privacySettings['education'] ?? '') === 'public' ? 'selected' : '' ?>>Public</option>
-                                            <option value="private" <?= ($privacySettings['education'] ?? '') === 'private' ? 'selected' : '' ?>>After Contact</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Occupation</td>
-                                    <td>
-                                        <select class="form-select form-select-sm" name="privacy_settings[occupation]">
-                                            <option value="public" <?= ($privacySettings['occupation'] ?? '') === 'public' ? 'selected' : '' ?>>Public</option>
-                                            <option value="private" <?= ($privacySettings['occupation'] ?? '') === 'private' ? 'selected' : '' ?>>After Contact</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Goals</td>
-                                    <td>
-                                        <select class="form-select form-select-sm" name="privacy_settings[goals]">
-                                            <option value="public" <?= ($privacySettings['goals'] ?? '') === 'public' ? 'selected' : '' ?>>Public</option>
-                                            <option value="private" <?= ($privacySettings['goals'] ?? '') === 'private' ? 'selected' : '' ?>>After Contact</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                    <form id="privacySettingsForm">
+                        <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Default Profile Visibility</label>
+                            <select name="default_privacy" class="form-select">
+                                <option value="public" <?= ($privacySettings['default'] ?? 'registered') === 'public' ? 'selected' : '' ?>>Public - Anyone can view</option>
+                                <option value="registered" <?= ($privacySettings['default'] ?? 'registered') === 'registered' ? 'selected' : '' ?>>Registered Users Only</option>
+                                <option value="private" <?= ($privacySettings['default'] ?? 'registered') === 'private' ? 'selected' : '' ?>>Private - Only Connected Users</option>
+                            </select>
+                            <div class="form-text">This is your profile's default visibility setting.</div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 40%">Information</th>
+                                        <th>Visibility Level</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="fw-medium">Profile Photo</div>
+                                            <small class="text-muted">Your main profile picture</small>
+                                        </td>
+                                        <td>
+                                            <select name="photo_privacy" class="form-select form-select-sm">
+                                                <option value="public" <?= ($privacySettings['photo'] ?? 'registered') === 'public' ? 'selected' : '' ?>>Public</option>
+                                                <option value="registered" <?= ($privacySettings['photo'] ?? 'registered') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
+                                                <option value="private" <?= ($privacySettings['photo'] ?? 'registered') === 'private' ? 'selected' : '' ?>>Connected Only</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="fw-medium">Contact Information</div>
+                                            <small class="text-muted">Email and phone number</small>
+                                        </td>
+                                        <td>
+                                            <select name="contact_privacy" class="form-select form-select-sm">
+                                                <option value="registered" <?= ($privacySettings['contact'] ?? 'private') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
+                                                <option value="private" <?= ($privacySettings['contact'] ?? 'private') === 'private' ? 'selected' : '' ?>>Connected Only</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="fw-medium">Horoscope</div>
+                                            <small class="text-muted">Your uploaded horoscope details</small>
+                                        </td>
+                                        <td>
+                                            <select name="horoscope_privacy" class="form-select form-select-sm">
+                                                <option value="registered" <?= ($privacySettings['horoscope'] ?? 'private') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
+                                                <option value="private" <?= ($privacySettings['horoscope'] ?? 'private') === 'private' ? 'selected' : '' ?>>Connected Only</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="fw-medium">Income Details</div>
+                                            <small class="text-muted">Your monthly income information</small>
+                                        </td>
+                                        <td>
+                                            <select name="income_privacy" class="form-select form-select-sm">
+                                                <option value="registered" <?= ($privacySettings['income'] ?? 'private') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
+                                                <option value="private" <?= ($privacySettings['income'] ?? 'private') === 'private' ? 'selected' : '' ?>>Connected Only</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="fw-medium">Bio</div>
+                                            <small class="text-muted">Your personal description</small>
+                                        </td>
+                                        <td>
+                                            <select name="bio_privacy" class="form-select form-select-sm">
+                                                <option value="public" <?= ($privacySettings['bio'] ?? 'registered') === 'public' ? 'selected' : '' ?>>Public</option>
+                                                <option value="registered" <?= ($privacySettings['bio'] ?? 'registered') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
+                                                <option value="private" <?= ($privacySettings['bio'] ?? 'registered') === 'private' ? 'selected' : '' ?>>Connected Only</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="fw-medium">Education</div>
+                                            <small class="text-muted">Your educational background</small>
+                                        </td>
+                                        <td>
+                                            <select name="education_privacy" class="form-select form-select-sm">
+                                                <option value="public" <?= ($privacySettings['education'] ?? 'registered') === 'public' ? 'selected' : '' ?>>Public</option>
+                                                <option value="registered" <?= ($privacySettings['education'] ?? 'registered') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
+                                                <option value="private" <?= ($privacySettings['education'] ?? 'registered') === 'private' ? 'selected' : '' ?>>Connected Only</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="fw-medium">Occupation</div>
+                                            <small class="text-muted">Your job and career details</small>
+                                        </td>
+                                        <td>
+                                            <select name="occupation_privacy" class="form-select form-select-sm">
+                                                <option value="public" <?= ($privacySettings['occupation'] ?? 'registered') === 'public' ? 'selected' : '' ?>>Public</option>
+                                                <option value="registered" <?= ($privacySettings['occupation'] ?? 'registered') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
+                                                <option value="private" <?= ($privacySettings['occupation'] ?? 'registered') === 'private' ? 'selected' : '' ?>>Connected Only</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="fw-medium">Goals & Preferences</div>
+                                            <small class="text-muted">Your life goals and preferences</small>
+                                        </td>
+                                        <td>
+                                            <select name="goals_privacy" class="form-select form-select-sm">
+                                                <option value="public" <?= ($privacySettings['goals'] ?? 'registered') === 'public' ? 'selected' : '' ?>>Public</option>
+                                                <option value="registered" <?= ($privacySettings['goals'] ?? 'registered') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
+                                                <option value="private" <?= ($privacySettings['goals'] ?? 'registered') === 'private' ? 'selected' : '' ?>>Connected Only</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-shield-check"></i> Save Privacy Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Privacy Help Modal -->
+            <div class="modal fade" id="privacyHelpModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Understanding Privacy Settings</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <h6 class="fw-bold">Visibility Levels:</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-3">
+                                    <i class="bi bi-globe text-primary"></i>
+                                    <strong>Public</strong>
+                                    <p class="text-muted small mb-0">Anyone visiting Sandawatha.lk can see this information</p>
+                                </li>
+                                <li class="mb-3">
+                                    <i class="bi bi-person-badge text-success"></i>
+                                    <strong>Registered Users</strong>
+                                    <p class="text-muted small mb-0">Only users who have created an account can see this information</p>
+                                </li>
+                                <li class="mb-3">
+                                    <i class="bi bi-people text-warning"></i>
+                                    <strong>Connected Only</strong>
+                                    <p class="text-muted small mb-0">Only users who you've accepted contact requests from can see this information</p>
+                                </li>
+                            </ul>
+                            <hr>
+                            <p class="small text-muted mb-0">
+                                <i class="bi bi-info-circle"></i> Your basic information like name and religion will always be visible to help others find you.
+                            </p>
+                        </div>
                     </div>
-                    <small class="text-muted">
-                        <i class="bi bi-info-circle"></i> "Public" means visible to all users. "After Contact" means visible only after contact request is accepted.
-                    </small>
                 </div>
             </div>
         </div>
@@ -356,95 +442,6 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
-<div class="card mb-4">
-    <div class="card-header">
-        <h5 class="card-title mb-0">Privacy Settings</h5>
-    </div>
-    <div class="card-body">
-        <form id="privacySettingsForm">
-            <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
-            
-            <div class="mb-3">
-                <label class="form-label">Default Profile Visibility</label>
-                <select name="default_privacy" class="form-select">
-                    <option value="public" <?= ($profile['privacy_settings']['default'] ?? 'registered') === 'public' ? 'selected' : '' ?>>Public - Anyone can view</option>
-                    <option value="registered" <?= ($profile['privacy_settings']['default'] ?? 'registered') === 'registered' ? 'selected' : '' ?>>Registered Users Only</option>
-                    <option value="private" <?= ($profile['privacy_settings']['default'] ?? 'registered') === 'private' ? 'selected' : '' ?>>Private - Only Connected Users</option>
-                </select>
-                <div class="form-text">This controls who can view your profile by default.</div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">Profile Photo</label>
-                        <select name="photo_privacy" class="form-select">
-                            <option value="public" <?= ($profile['privacy_settings']['photo'] ?? 'registered') === 'public' ? 'selected' : '' ?>>Public</option>
-                            <option value="registered" <?= ($profile['privacy_settings']['photo'] ?? 'registered') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
-                            <option value="private" <?= ($profile['privacy_settings']['photo'] ?? 'registered') === 'private' ? 'selected' : '' ?>>Connected Only</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">Contact Information</label>
-                        <select name="contact_privacy" class="form-select">
-                            <option value="registered" <?= ($profile['privacy_settings']['contact'] ?? 'private') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
-                            <option value="private" <?= ($profile['privacy_settings']['contact'] ?? 'private') === 'private' ? 'selected' : '' ?>>Connected Only</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">Horoscope</label>
-                        <select name="horoscope_privacy" class="form-select">
-                            <option value="registered" <?= ($profile['privacy_settings']['horoscope'] ?? 'private') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
-                            <option value="private" <?= ($profile['privacy_settings']['horoscope'] ?? 'private') === 'private' ? 'selected' : '' ?>>Connected Only</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">Income Information</label>
-                        <select name="income_privacy" class="form-select">
-                            <option value="registered" <?= ($profile['privacy_settings']['income'] ?? 'private') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
-                            <option value="private" <?= ($profile['privacy_settings']['income'] ?? 'private') === 'private' ? 'selected' : '' ?>>Connected Only</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">Bio & About Me</label>
-                        <select name="bio_privacy" class="form-select">
-                            <option value="public" <?= ($profile['privacy_settings']['bio'] ?? 'registered') === 'public' ? 'selected' : '' ?>>Public</option>
-                            <option value="registered" <?= ($profile['privacy_settings']['bio'] ?? 'registered') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
-                            <option value="private" <?= ($profile['privacy_settings']['bio'] ?? 'registered') === 'private' ? 'selected' : '' ?>>Connected Only</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">Education & Career</label>
-                        <select name="education_privacy" class="form-select">
-                            <option value="public" <?= ($profile['privacy_settings']['education'] ?? 'registered') === 'public' ? 'selected' : '' ?>>Public</option>
-                            <option value="registered" <?= ($profile['privacy_settings']['education'] ?? 'registered') === 'registered' ? 'selected' : '' ?>>Registered Users</option>
-                            <option value="private" <?= ($profile['privacy_settings']['education'] ?? 'registered') === 'private' ? 'selected' : '' ?>>Connected Only</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Save Privacy Settings</button>
-        </form>
     </div>
 </div>
 

@@ -7,8 +7,42 @@
         <div class="col-lg-4 mb-4">
             <div class="card">
                 <div class="position-relative">
-                    <?php $photoUrl = $profile['profile_photo'] ? UPLOAD_URL . $profile['profile_photo'] : BASE_URL . '/assets/images/default-profile.jpg'; ?>
-                    <img src="<?= $photoUrl ?>" class="card-img-top profile-image" alt="Profile Photo">
+                    <?php 
+                    $canViewPhoto = true;
+                    $privacySettings = json_decode($profile['privacy_settings'] ?? '{}', true);
+                    $photoPrivacy = $privacySettings['photo'] ?? 'public';
+                    
+                    // Check photo privacy
+                    if ($photoPrivacy === 'private' && (!isset($contact_status) || $contact_status !== 'accepted')) {
+                        $canViewPhoto = false;
+                    } elseif ($photoPrivacy === 'registered' && !isset($_SESSION['user_id'])) {
+                        $canViewPhoto = false;
+                    }
+                    
+                    if ($canViewPhoto && !empty($profile['profile_photo'])): ?>
+                        <img src="<?= UPLOAD_URL . $profile['profile_photo'] ?>" 
+                             class="card-img-top profile-image" 
+                             alt="Profile Photo"
+                             style="height: 300px; object-fit: cover;">
+                    <?php else: ?>
+                        <div class="card-img-top profile-image d-flex align-items-center justify-content-center bg-light" 
+                             style="height: 300px;">
+                            <div class="text-center">
+                                <i class="bi bi-person-circle text-muted" style="font-size: 6rem;"></i>
+                                <?php if (!$canViewPhoto): ?>
+                                    <p class="text-muted mt-2 mb-0">
+                                        <i class="bi bi-lock"></i> 
+                                        <?php if ($photoPrivacy === 'private'): ?>
+                                            Photo visible after connecting
+                                        <?php else: ?>
+                                            Photo visible to registered users
+                                        <?php endif; ?>
+                                    </p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                    
                     <?php if (isset($profile['online_status']) && $profile['online_status'] === 'online'): ?>
                         <span class="badge bg-success position-absolute top-0 end-0 m-2">Online</span>
                     <?php endif; ?>
@@ -161,6 +195,7 @@
                         </div>
                     </div>
                 </div>
+            </div>
             <?php endif; ?>
             
             <!-- Goals & Preferences -->

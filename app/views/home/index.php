@@ -138,8 +138,14 @@
                 <div class="col-md-6 col-lg-4">
                     <div class="card profile-card h-100">
                         <div class="position-relative">
-                        <img src="<?= $profile['profile_photo'] ? UPLOAD_URL . $profile['profile_photo'] : BASE_URL . '/assets/images/default-profile.jpg' ?>" 
-                                 class="card-img-top profile-image" alt="Profile">
+                            <?php if ($profile['profile_photo']): ?>
+                                <img src="<?= UPLOAD_URL . $profile['profile_photo'] ?>" 
+                                     class="card-img-top profile-image" alt="Profile">
+                            <?php else: ?>
+                                <div class="card-img-top profile-image d-flex align-items-center justify-content-center bg-light" style="height: 250px;">
+                                    <i class="bi bi-person-circle text-muted" style="font-size: 5rem;"></i>
+                                </div>
+                            <?php endif; ?>
                             <span class="badge bg-success position-absolute top-0 end-0 m-2">New</span>
                         </div>
                         <div class="card-body">

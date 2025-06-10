@@ -55,13 +55,15 @@ class ProfileModel extends BaseModel {
                     u.created_at as member_since,
                     TIMESTAMPDIFF(YEAR, up.date_of_birth, CURDATE()) as age,
                     CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END as is_favorite,
-                    cr.status as contact_status
+                    cr.status as contact_status,
+                    cr.id as has_contact
                 FROM user_profiles up
                 JOIN users u ON up.user_id = u.id
                 LEFT JOIN favorites f ON f.favorite_user_id = up.user_id AND f.user_id = :viewer_id1
                 LEFT JOIN contact_requests cr ON 
                     ((cr.sender_id = :viewer_id2 AND cr.receiver_id = up.user_id) OR 
                      (cr.sender_id = up.user_id AND cr.receiver_id = :viewer_id3))
+                    AND cr.status = 'accepted'
                 WHERE up.user_id = :user_id AND u.status = 'active'";
 
             $stmt = $this->db->prepare($sql);
@@ -77,15 +79,28 @@ class ProfileModel extends BaseModel {
                 return null;
             }
 
-            // Basic public information
+            // Decode privacy settings
+            $privacySettings = json_decode($profile['privacy_settings'] ?? '{}', true) ?? [
+                'default' => 'registered',
+                'photo' => 'registered',
+                'contact' => 'private',
+                'horoscope' => 'private',
+                'income' => 'private',
+                'bio' => 'registered',
+                'education' => 'registered',
+                'occupation' => 'registered',
+                'goals' => 'registered'
+            ];
+
+            // Basic public information always visible
             $publicProfile = [
                 'user_id' => $profile['user_id'],
                 'first_name' => $profile['first_name'],
                 'age' => $profile['age'],
                 'district' => $profile['district'],
                 'religion' => $profile['religion'],
-                'education' => $profile['education'],
-                'profile_photo' => $profile['profile_photo']
+                'education' => $this->checkPrivacy($profile['education'], $privacySettings['education'], $viewerId, $profile['has_contact']),
+                'profile_photo' => $this->checkPrivacy($profile['profile_photo'], $privacySettings['photo'], $viewerId, $profile['has_contact'])
             ];
 
             // If it's the profile owner or an admin
@@ -101,22 +116,47 @@ class ProfileModel extends BaseModel {
                 return $publicProfile;
             }
 
-            // For logged-in users, add more information
-            return array_merge($publicProfile, [
+            // For logged-in users, check privacy settings for each field
+            $fullProfile = array_merge($publicProfile, [
                 'gender' => $profile['gender'],
                 'city' => $profile['city'],
                 'caste' => $profile['caste'],
                 'marital_status' => $profile['marital_status'],
                 'height_cm' => $profile['height_cm'],
-                'occupation' => $profile['occupation'],
-                'bio' => $profile['bio'],
+                'occupation' => $this->checkPrivacy($profile['occupation'], $privacySettings['occupation'], $viewerId, $profile['has_contact']),
+                'bio' => $this->checkPrivacy($profile['bio'], $privacySettings['bio'], $viewerId, $profile['has_contact']),
+                'goals' => $this->checkPrivacy($profile['goals'], $privacySettings['goals'], $viewerId, $profile['has_contact']),
+                'income_lkr' => $this->checkPrivacy($profile['income_lkr'], $privacySettings['income'], $viewerId, $profile['has_contact']),
+                'horoscope_file' => $this->checkPrivacy($profile['horoscope_file'], $privacySettings['horoscope'], $viewerId, $profile['has_contact']),
                 'is_favorite' => $profile['is_favorite'],
                 'contact_status' => $profile['contact_status']
             ]);
 
+            // Remove null values from the array
+            return array_filter($fullProfile, function($value) {
+                return $value !== null;
+            });
+
         } catch (Exception $e) {
             error_log("Error in getProfileWithUser: " . $e->getMessage());
             return null;
+        }
+    }
+
+    private function checkPrivacy($value, $privacySetting, $viewerId, $hasContact) {
+        if (!$value) {
+            return null;
+        }
+
+        switch ($privacySetting) {
+            case 'public':
+                return $value;
+            case 'registered':
+                return $viewerId ? $value : null;
+            case 'private':
+                return $hasContact ? $value : null;
+            default:
+                return $viewerId ? $value : null;
         }
     }
 
@@ -134,18 +174,28 @@ class ProfileModel extends BaseModel {
                        TIMESTAMPDIFF(YEAR, p.date_of_birth, CURDATE()) as age,
                        CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END as is_favorite,
                        CASE WHEN cr.id IS NOT NULL THEN cr.status ELSE NULL END as contact_status,
-                       CASE WHEN pm.id IS NOT NULL THEN 1 ELSE 0 END as is_premium
+                       CASE WHEN pm.id IS NOT NULL THEN 1 ELSE 0 END as is_premium,
+                       CASE 
+                           WHEN JSON_EXTRACT(p.privacy_settings, '$.photo') = 'private' AND (cr.status IS NULL OR cr.status != 'accepted') THEN NULL
+                           WHEN JSON_EXTRACT(p.privacy_settings, '$.photo') = 'registered' AND :current_user_id IS NULL THEN NULL
+                           ELSE p.profile_photo
+                       END as profile_photo
                 FROM {$this->table} p
                 LEFT JOIN users u ON p.user_id = u.id
                 LEFT JOIN favorites f ON f.favorite_user_id = p.user_id AND f.user_id = :current_user_id1
-                LEFT JOIN contact_requests cr ON (cr.sender_id = :current_user_id2 AND cr.receiver_id = p.user_id)
+                LEFT JOIN contact_requests cr ON (
+                    (cr.sender_id = :current_user_id2 AND cr.receiver_id = p.user_id) OR 
+                    (cr.sender_id = p.user_id AND cr.receiver_id = :current_user_id3)
+                )
                 LEFT JOIN premium_memberships pm ON pm.user_id = p.user_id AND pm.status = 'active' AND pm.end_date >= CURDATE()
-                WHERE u.status = 'active' AND p.user_id != :current_user_id3";
+                WHERE u.status = 'active' AND p.user_id != :current_user_id4";
         
         $params = [
+            ':current_user_id' => $currentUserId,
             ':current_user_id1' => $currentUserId,
             ':current_user_id2' => $currentUserId,
-            ':current_user_id3' => $currentUserId
+            ':current_user_id3' => $currentUserId,
+            ':current_user_id4' => $currentUserId
         ];
         
         // Apply filters
@@ -258,16 +308,30 @@ class ProfileModel extends BaseModel {
         return $this->fetchOne($sql);
     }
     
-    public function getRecentProfiles($limit = 6) {
+    public function getRecentProfiles($limit = 6, $currentUserId = null) {
         $sql = "SELECT p.*, u.status as user_status,
-                       TIMESTAMPDIFF(YEAR, p.date_of_birth, CURDATE()) as age
+                       TIMESTAMPDIFF(YEAR, p.date_of_birth, CURDATE()) as age,
+                       CASE 
+                           WHEN JSON_EXTRACT(p.privacy_settings, '$.photo') = 'private' THEN NULL
+                           WHEN JSON_EXTRACT(p.privacy_settings, '$.photo') = 'registered' AND :current_user_id IS NULL THEN NULL
+                           ELSE p.profile_photo
+                       END as profile_photo
                 FROM {$this->table} p
                 LEFT JOIN users u ON p.user_id = u.id
                 WHERE u.status = 'active'
+                " . ($currentUserId ? "AND p.user_id != :exclude_user_id" : "") . "
                 ORDER BY p.created_at DESC
                 LIMIT :limit";
         
-        return $this->fetchAll($sql, [':limit' => $limit]);
+        $params = [':limit' => $limit];
+        if ($currentUserId) {
+            $params[':current_user_id'] = $currentUserId;
+            $params[':exclude_user_id'] = $currentUserId;
+        } else {
+            $params[':current_user_id'] = null;
+        }
+        
+        return $this->fetchAll($sql, $params);
     }
     
     public function incrementViewCount($userId, $viewerId) {
@@ -384,6 +448,7 @@ class ProfileModel extends BaseModel {
                 LEFT JOIN users u ON p.user_id = u.id
                 WHERE u.status = 'active' 
                 AND p.id != :profile_id 
+                AND p.user_id != :user_id
                 AND p.gender != :gender
                 HAVING similarity_score > 0
                 ORDER BY similarity_score DESC, p.created_at DESC
@@ -395,6 +460,7 @@ class ProfileModel extends BaseModel {
             ':education' => $profile['education'],
             ':birth_date' => $profile['date_of_birth'],
             ':profile_id' => $profileId,
+            ':user_id' => $profile['user_id'],
             ':gender' => $profile['gender'],
             ':limit' => $limit
         ]);

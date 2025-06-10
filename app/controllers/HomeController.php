@@ -13,8 +13,11 @@ class HomeController extends BaseController {
     }
     
     public function index() {
+        // Get current user ID if logged in
+        $currentUserId = $_SESSION['user_id'] ?? null;
+        
         // Get recent profiles for homepage showcase
-        $recentProfiles = $this->profileModel->getRecentProfiles(6);
+        $recentProfiles = $this->profileModel->getRecentProfiles(6, $currentUserId);
         
         // Get site statistics
         $stats = $this->profileModel->getProfileStats();
