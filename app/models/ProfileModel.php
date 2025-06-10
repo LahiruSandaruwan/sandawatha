@@ -443,9 +443,19 @@ class ProfileModel extends BaseModel {
                            CASE WHEN p.district = :district THEN 1 ELSE 0 END +
                            CASE WHEN p.education = :education THEN 1 ELSE 0 END +
                            CASE WHEN ABS(TIMESTAMPDIFF(YEAR, p.date_of_birth, :birth_date)) <= 3 THEN 1 ELSE 0 END
-                       ) as similarity_score
+                       ) as similarity_score,
+                       CASE WHEN cr.id IS NOT NULL THEN cr.status ELSE NULL END as contact_status,
+                       CASE 
+                           WHEN JSON_EXTRACT(p.privacy_settings, '$.photo') = 'private' AND (cr.status IS NULL OR cr.status != 'accepted') THEN NULL
+                           WHEN JSON_EXTRACT(p.privacy_settings, '$.photo') = 'registered' AND :current_user_id IS NULL THEN NULL
+                           ELSE p.profile_photo
+                       END as profile_photo
                 FROM {$this->table} p
                 LEFT JOIN users u ON p.user_id = u.id
+                LEFT JOIN contact_requests cr ON (
+                    (cr.sender_id = :current_user_id2 AND cr.receiver_id = p.user_id) OR 
+                    (cr.sender_id = p.user_id AND cr.receiver_id = :current_user_id3)
+                )
                 WHERE u.status = 'active' 
                 AND p.id != :profile_id 
                 AND p.user_id != :user_id
@@ -462,6 +472,9 @@ class ProfileModel extends BaseModel {
             ':profile_id' => $profileId,
             ':user_id' => $profile['user_id'],
             ':gender' => $profile['gender'],
+            ':current_user_id' => $profile['user_id'],
+            ':current_user_id2' => $profile['user_id'],
+            ':current_user_id3' => $profile['user_id'],
             ':limit' => $limit
         ]);
     }

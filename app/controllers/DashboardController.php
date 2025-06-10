@@ -37,7 +37,7 @@ class DashboardController extends BaseController {
         $contact_stats   = $this->contactModel->getRequestStats($currentUser['id']);
         
         // Get suggested matches
-        $suggestedMatches = $this->profileModel->getSimilarProfiles($currentUser['id'], 4);
+        $suggestedMatches = $this->profileModel->getSimilarProfiles($profile['id'], 4);
         
         // Get recent visitors
         $recentVisitors = $this->profileModel->getRecentVisitors($currentUser['id'], 5);

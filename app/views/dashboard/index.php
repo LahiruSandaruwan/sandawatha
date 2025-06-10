@@ -154,8 +154,26 @@
                     <?php else: ?>
                         <?php foreach ($recent_requests as $request): ?>
                             <div class="d-flex align-items-center p-3 border-bottom">
-                                <img src="<?= $request['profile_photo'] ? UPLOAD_URL . $request['profile_photo'] : BASE_URL . '/assets/images/default-profile.jpg' ?>" 
-                                     alt="Profile" class="rounded-circle me-3" width="50" height="50">
+                                <?php 
+                                $canViewPhoto = true;
+                                $privacySettings = json_decode($request['privacy_settings'] ?? '{}', true);
+                                $photoPrivacy = $privacySettings['photo'] ?? 'public';
+                                
+                                // Check photo privacy
+                                if ($photoPrivacy === 'private' && (!isset($contact_status) || $contact_status !== 'accepted')) {
+                                    $canViewPhoto = false;
+                                } elseif ($photoPrivacy === 'registered' && !isset($_SESSION['user_id'])) {
+                                    $canViewPhoto = false;
+                                }
+                                ?>
+                                <?php if ($canViewPhoto && !empty($request['profile_photo'])): ?>
+                                    <img src="<?= UPLOAD_URL . $request['profile_photo'] ?>" 
+                                         alt="Profile" class="rounded-circle me-3" width="50" height="50">
+                                <?php else: ?>
+                                    <div class="rounded-circle me-3 bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                        <i class="bi bi-person-circle text-muted"></i>
+                                    </div>
+                                <?php endif; ?>
                                 <div class="flex-grow-1">
                                     <h6 class="mb-1"><?= htmlspecialchars($request['first_name'] . ' ' . $request['last_name']) ?></h6>
                                     <small class="text-muted"><?= $request['age'] ?> years • <?= htmlspecialchars($request['district']) ?></small>
@@ -190,15 +208,30 @@
                                 <div class="card border">
                                     <div class="card-body p-3">
                                         <div class="d-flex align-items-center">
-                                            <img src="<?= $match['profile_photo'] ? UPLOAD_URL . $match['profile_photo'] : BASE_URL . '/assets/images/default-profile.jpg' ?>" 
-                                                 alt="Profile" class="rounded-circle me-3" width="60" height="60">
+                                            <?php if (!empty($match['profile_photo'])): ?>
+                                                <img src="<?= UPLOAD_URL . $match['profile_photo'] ?>" 
+                                                     alt="Profile" class="rounded-circle me-3" width="60" height="60">
+                                            <?php else: ?>
+                                                <div class="rounded-circle me-3 bg-light d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                                    <i class="bi bi-person-circle text-muted"></i>
+                                                    <?php if (isset($match['privacy_settings'])): ?>
+                                                        <?php 
+                                                        $privacySettings = json_decode($match['privacy_settings'], true);
+                                                        $photoPrivacy = $privacySettings['photo'] ?? 'public';
+                                                        ?>
+                                                        <div class="position-absolute bottom-0 end-0">
+                                                            <i class="bi bi-lock-fill text-muted small"></i>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php endif; ?>
                                             <div class="flex-grow-1">
                                                 <h6 class="mb-1"><?= htmlspecialchars($match['first_name']) ?></h6>
                                                 <small class="text-muted"><?= $match['age'] ?> years • <?= htmlspecialchars($match['district']) ?></small>
                                             </div>
                                         </div>
                                         <div class="mt-2">
-                                            <a href="<?= BASE_URL ?>/profile/<?= $match['id'] ?>" class="btn btn-sm btn-primary me-2">
+                                            <a href="<?= BASE_URL ?>/profile/<?= $match['user_id'] ?>" class="btn btn-sm btn-primary me-2">
                                                 <i class="bi bi-eye"></i> View
                                             </a>
                                             <button class="btn btn-sm btn-outline-danger" onclick="toggleFavorite(<?= $match['user_id'] ?>)">
