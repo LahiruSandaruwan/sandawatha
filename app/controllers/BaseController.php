@@ -1,4 +1,6 @@
 <?php
+require_once SITE_ROOT . '/app/helpers/functions.php';
+
 abstract class BaseController {
     
     protected function view($view, $data = []) {
@@ -49,14 +51,100 @@ abstract class BaseController {
         $this->redirect($url);
     }
     
+    protected function startSession() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // Regenerate session ID periodically to prevent session fixation
+        if (!isset($_SESSION['last_regeneration']) || 
+            (time() - $_SESSION['last_regeneration']) > 300) { // 5 minutes
+            session_regenerate_id(true);
+            $_SESSION['last_regeneration'] = time();
+        }
+    }
+    
+    protected function validateCsrf() {
+        try {
+            $token = $_POST['csrf_token'] ?? null;
+            $sessionToken = $_SESSION['csrf_token'] ?? null;
+            
+            if (!$token || !$sessionToken) {
+                error_log("CSRF validation failed: Token missing");
+                error_log("POST token: " . ($token ? $token : 'null'));
+                error_log("Session token: " . ($sessionToken ? $sessionToken : 'null'));
+                return false;
+            }
+            
+            if (!hash_equals($sessionToken, $token)) {
+                error_log("CSRF validation failed: Token mismatch");
+                error_log("POST token: " . $token);
+                error_log("Session token: " . $sessionToken);
+                return false;
+            }
+            
+            return true;
+        } catch (Exception $e) {
+            error_log("Error in validateCsrf: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return false;
+        }
+    }
+    
+    protected function generateCsrf() {
+        try {
+            if (!isset($_SESSION['csrf_token'])) {
+                $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+            }
+            
+            return $_SESSION['csrf_token'];
+        } catch (Exception $e) {
+            error_log("Error in generateCsrf: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            
+            // Fallback to a less secure but still usable token
+            if (!isset($_SESSION['csrf_token'])) {
+                $_SESSION['csrf_token'] = md5(uniqid(mt_rand(), true));
+            }
+            
+            return $_SESSION['csrf_token'];
+        }
+    }
+    
     protected function getCurrentUser() {
         if (!isset($_SESSION['user_id'])) {
             return null;
         }
         
-        require_once SITE_ROOT . '/app/models/UserModel.php';
-        $userModel = new UserModel();
-        return $userModel->find($_SESSION['user_id']);
+        try {
+            require_once SITE_ROOT . '/app/models/UserModel.php';
+            $userModel = new UserModel();
+            $user = $userModel->find($_SESSION['user_id']);
+            
+            if (!$user || $user['status'] !== 'active') {
+                $this->logout();
+                return null;
+            }
+            
+            return $user;
+        } catch (Exception $e) {
+            error_log("Error in getCurrentUser: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return null;
+        }
+    }
+    
+    protected function logout() {
+        // Clear all session data
+        $_SESSION = [];
+        
+        // Delete the session cookie
+        if (isset($_COOKIE[session_name()])) {
+            setcookie(session_name(), '', time() - 3600, '/');
+        }
+        
+        // Destroy the session
+        session_destroy();
     }
     
     protected function getCurrentUserProfile() {
@@ -67,21 +155,6 @@ abstract class BaseController {
         require_once SITE_ROOT . '/app/models/ProfileModel.php';
         $profileModel = new ProfileModel();
         return $profileModel->findByUserId($_SESSION['user_id']);
-    }
-    
-    protected function validateCsrf() {
-        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token'])) {
-            return false;
-        }
-        
-        return hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
-    }
-    
-    protected function generateCsrf() {
-        if (!isset($_SESSION['csrf_token'])) {
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-        }
-        return $_SESSION['csrf_token'];
     }
     
     protected function sanitizeInput($input) {
@@ -145,18 +218,24 @@ abstract class BaseController {
         }
     }
     
-    protected function logUserActivity($userId, $action, $details = null) {
-        require_once SITE_ROOT . '/app/models/ActivityLogModel.php';
-        $activityModel = new ActivityLogModel();
-        
-        $activityModel->create([
-            'user_id' => $userId,
-            'action' => $action,
-            'details' => $details,
-            'ip_address' => $_SERVER['REMOTE_ADDR'],
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'],
-            'created_at' => date('Y-m-d H:i:s')
-        ]);
+    protected function logUserActivity($userId = null, $action = null, $details = null) {
+        try {
+            if (!$userId) {
+                $userId = $_SESSION['user_id'] ?? null;
+            }
+            
+            if (!$userId || !$action) {
+                return false;
+            }
+            
+            require_once __DIR__ . '/../models/ActivityLogModel.php';
+            $activityModel = new ActivityLogModel();
+            
+            return $activityModel->createActivityLog($userId, $action, $details);
+        } catch (Exception $e) {
+            error_log("Error in logUserActivity: " . $e->getMessage());
+            return false;
+        }
     }
     
     protected function sendEmail($to, $subject, $body, $isHtml = true) {

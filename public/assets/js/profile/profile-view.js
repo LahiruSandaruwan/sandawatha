@@ -1,37 +1,7 @@
 // Get BASE_URL from meta tag
 const BASE_URL = document.querySelector('meta[name="base-url"]')?.content || '';
 
-// Contact Request Functions
-function sendContactRequest(profileId) {
-    document.getElementById('contactProfileId').value = profileId;
-    const modal = new bootstrap.Modal(document.getElementById('contactRequestModal'));
-    modal.show();
-}
-
-function submitContactRequest() {
-    const form = document.getElementById('contactRequestForm');
-    const formData = new FormData(form);
-    
-    fetch(BASE_URL + '/contact-request/send', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showAlert(data.message, 'success');
-            bootstrap.Modal.getInstance(document.getElementById('contactRequestModal')).hide();
-            // Update button state
-            location.reload(); // Refresh to show updated status
-        } else {
-            showAlert(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showAlert('Failed to send contact request. Please try again.', 'error');
-    });
-}
+// Contact Request Functions are now handled in app.js
 
 // Favorite Functions
 function toggleFavorite(profileId) {

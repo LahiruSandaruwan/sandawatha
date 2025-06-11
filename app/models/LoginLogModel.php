@@ -119,5 +119,18 @@ class LoginLogModel extends BaseModel {
         $result = $this->fetchOne($sql, [':hours' => $hours]);
         return $result['count'];
     }
+    
+    protected function getAllowedColumns() {
+        return [
+            'user_id',
+            'ip_address',
+            'user_agent',
+            'browser',
+            'device',
+            'login_time',
+            'logout_time',
+            'session_duration'
+        ];
+    }
 }
 ?>

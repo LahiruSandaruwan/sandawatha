@@ -135,17 +135,57 @@ function previewImage(input, previewId) {
 
 // Profile Actions
 function sendContactRequest(profileId) {
-    if (!confirm('Send contact request to this profile?')) return;
+    document.getElementById('contactProfileId').value = profileId;
+    const modal = new bootstrap.Modal(document.getElementById('contactRequestModal'));
+    modal.show();
+}
+
+function submitContactRequest() {
+    const form = document.getElementById('contactRequestForm');
+    const formData = new FormData(form);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    const baseUrl = document.querySelector('meta[name="base-url"]')?.content || '';
     
-    $.post('/contact-request/send', { profile_id: profileId })
-        .done(function(response) {
-            showAlert('Contact request sent successfully!', 'success');
-            updateContactButton(profileId, 'sent');
-        })
-        .fail(function(xhr) {
-            const message = xhr.responseJSON?.message || 'Failed to send contact request';
-            showAlert(message, 'error');
-        });
+    if (!csrfToken) {
+        showAlert('Security token not found. Please refresh the page.', 'error');
+        return;
+    }
+    
+    // Add CSRF token to form data if not already present
+    if (!formData.has('csrf_token')) {
+        formData.append('csrf_token', csrfToken);
+    }
+    
+    fetch(`${baseUrl}/contact-request/send`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('contactRequestModal'));
+            if (modal) {
+                modal.hide();
+            }
+            
+            // Update button state
+            const profileId = formData.get('profile_id');
+            const btn = document.querySelector(`button[onclick="sendContactRequest(${profileId})"]`);
+            if (btn) {
+                btn.className = 'btn btn-warning';
+                btn.disabled = true;
+                btn.innerHTML = '<i class="bi bi-clock"></i> Request Pending';
+            }
+        } else {
+            showAlert(data.message || 'Failed to send request', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Failed to send contact request. Please try again.', 'error');
+    });
 }
 
 function toggleFavorite(profileId) {

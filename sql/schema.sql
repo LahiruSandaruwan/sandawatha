@@ -1,9 +1,7 @@
 -- Sandawatha.lk Database Schema
-CREATE DATABASE IF NOT EXISTS sandawatha_lk CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE sandawatha_lk;
 
 -- Users table
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     phone VARCHAR(20) UNIQUE NOT NULL,
@@ -181,6 +179,19 @@ CREATE TABLE profile_views (
     FOREIGN KEY (viewer_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (viewed_profile_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE KEY unique_daily_view (viewer_id, viewed_profile_id, view_date)
+);
+
+-- Activity logs table
+CREATE TABLE activity_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    action VARCHAR(100) NOT NULL,
+    details TEXT NULL,
+    ip_address VARCHAR(45) NOT NULL,
+    user_agent TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Gift suggestions table (static data)

@@ -48,15 +48,49 @@ class ContactRequestModel extends BaseModel {
             throw new Exception('Invalid status');
         }
         
-        $sql = "UPDATE {$this->table} 
-                SET status = :status, responded_at = NOW()
-                WHERE id = :request_id AND receiver_id = :user_id AND status = 'pending'";
-        
-        return $this->execute($sql, [
-            ':status' => $status,
-            ':request_id' => $requestId,
-            ':user_id' => $userId
-        ]);
+        try {
+            $this->db->beginTransaction();
+            
+            // First, check if the request exists and is pending
+            $request = $this->find($requestId);
+            if (!$request) {
+                throw new Exception('Contact request not found');
+            }
+            
+            if ($request['receiver_id'] !== $userId) {
+                throw new Exception('You are not authorized to respond to this request');
+            }
+            
+            if ($request['status'] !== 'pending') {
+                throw new Exception('This request has already been ' . $request['status']);
+            }
+            
+            $sql = "UPDATE {$this->table} 
+                    SET status = :status, responded_at = NOW()
+                    WHERE id = :request_id AND receiver_id = :user_id AND status = 'pending'";
+            
+            $params = [
+                ':status' => $status,
+                ':request_id' => $requestId,
+                ':user_id' => $userId
+            ];
+            
+            $stmt = $this->execute($sql, $params);
+            $success = $stmt->rowCount() > 0;
+            
+            if ($success) {
+                $this->db->commit();
+                return true;
+            } else {
+                $this->db->rollBack();
+                throw new Exception('Failed to update contact request status');
+            }
+        } catch (PDOException $e) {
+            $this->db->rollBack();
+            error_log("Database error in respondToRequest(): " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            throw new Exception('Failed to respond to contact request');
+        }
     }
     
     public function getReceivedRequests($userId, $page = 1, $limit = 20) {

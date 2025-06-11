@@ -66,11 +66,13 @@ class ContactController extends BaseController {
     public function respond() {
         if (!$this->validateCsrf()) {
             $this->json(['success' => false, 'message' => 'Invalid security token'], 400);
+            return;
         }
         
         $currentUser = $this->getCurrentUser();
         if (!$currentUser) {
             $this->json(['success' => false, 'message' => 'Not authenticated'], 401);
+            return;
         }
         
         $requestId = $_POST['request_id'] ?? '';
@@ -78,13 +80,31 @@ class ContactController extends BaseController {
         
         if (empty($requestId) || empty($status)) {
             $this->json(['success' => false, 'message' => 'Request ID and status are required'], 400);
+            return;
         }
         
         if (!in_array($status, ['accepted', 'rejected'])) {
             $this->json(['success' => false, 'message' => 'Invalid status'], 400);
+            return;
         }
         
         try {
+            $request = $this->contactModel->find($requestId);
+            if (!$request) {
+                $this->json(['success' => false, 'message' => 'Contact request not found'], 404);
+                return;
+            }
+            
+            if ($request['receiver_id'] !== $currentUser['id']) {
+                $this->json(['success' => false, 'message' => 'You are not authorized to respond to this request'], 403);
+                return;
+            }
+            
+            if ($request['status'] !== 'pending') {
+                $this->json(['success' => false, 'message' => 'This request has already been ' . $request['status']], 400);
+                return;
+            }
+            
             $success = $this->contactModel->respondToRequest($requestId, $currentUser['id'], $status);
             
             if ($success) {
@@ -100,7 +120,9 @@ class ContactController extends BaseController {
                 $this->json(['success' => false, 'message' => 'Failed to respond to contact request'], 400);
             }
         } catch (Exception $e) {
-            $this->json(['success' => false, 'message' => $e->getMessage()], 400);
+            error_log("Error in ContactController::respond: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            $this->json(['success' => false, 'message' => 'An error occurred while processing your request'], 500);
         }
     }
     

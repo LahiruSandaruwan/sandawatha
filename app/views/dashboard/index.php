@@ -153,42 +153,32 @@
                         </div>
                     <?php else: ?>
                         <?php foreach ($recent_requests as $request): ?>
-                            <div class="d-flex align-items-center p-3 border-bottom">
-                                <?php 
-                                $canViewPhoto = true;
-                                $privacySettings = json_decode($request['privacy_settings'] ?? '{}', true);
-                                $photoPrivacy = $privacySettings['photo'] ?? 'public';
-                                
-                                // Check photo privacy
-                                if ($photoPrivacy === 'private' && (!isset($contact_status) || $contact_status !== 'accepted')) {
-                                    $canViewPhoto = false;
-                                } elseif ($photoPrivacy === 'registered' && !isset($_SESSION['user_id'])) {
-                                    $canViewPhoto = false;
-                                }
-                                ?>
-                                <?php if ($canViewPhoto && !empty($request['profile_photo'])): ?>
-                                    <img src="<?= UPLOAD_URL . $request['profile_photo'] ?>" 
-                                         alt="Profile" class="rounded-circle me-3" width="50" height="50">
-                                <?php else: ?>
-                                    <div class="rounded-circle me-3 bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                        <i class="bi bi-person-circle text-muted"></i>
-                                    </div>
-                                <?php endif; ?>
+                            <div class="d-flex align-items-center p-3 border-bottom" data-request-id="<?= $request['id'] ?>">
+                                <img src="<?= $request['profile_photo'] ?? BASE_URL . '/assets/images/default-avatar.png' ?>" 
+                                     class="rounded-circle me-3" width="50" height="50" alt="Profile Photo">
                                 <div class="flex-grow-1">
-                                    <h6 class="mb-1"><?= htmlspecialchars($request['first_name'] . ' ' . $request['last_name']) ?></h6>
+                                    <h6 class="mb-1">
+                                        <?= htmlspecialchars($request['first_name'] . ' ' . $request['last_name']) ?>
+                                        <span class="badge bg-<?= $request['status'] === 'pending' ? 'warning' : ($request['status'] === 'accepted' ? 'success' : 'danger') ?> status-badge">
+                                            <?= ucfirst($request['status']) ?>
+                                        </span>
+                                    </h6>
                                     <small class="text-muted"><?= $request['age'] ?> years • <?= htmlspecialchars($request['district']) ?></small>
                                     <?php if ($request['message']): ?>
-                                        <p class="small text-muted mb-0"><?= htmlspecialchars(substr($request['message'], 0, 100)) ?>...</p>
+                                        <p class="small text-muted mb-0"><?= htmlspecialchars($request['message']) ?></p>
                                     <?php endif; ?>
+                                    <small class="text-muted d-block">Sent <?= timeAgo($request['sent_at']) ?></small>
                                 </div>
-                                <div class="btn-group-vertical">
-                                    <button class="btn btn-sm btn-success" onclick="respondToRequest(<?= $request['id'] ?>, 'accepted')">
-                                        <i class="bi bi-check"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" onclick="respondToRequest(<?= $request['id'] ?>, 'rejected')">
-                                        <i class="bi bi-x"></i>
-                                    </button>
-                                </div>
+                                <?php if ($request['status'] === 'pending'): ?>
+                                    <div class="btn-group-vertical">
+                                        <button class="btn btn-sm btn-success" onclick="respondToRequest(<?= $request['id'] ?>, 'accepted')">
+                                            <i class="bi bi-check"></i> Accept
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="respondToRequest(<?= $request['id'] ?>, 'rejected')">
+                                            <i class="bi bi-x"></i> Reject
+                                        </button>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -337,15 +327,25 @@
 function respondToRequest(requestId, status) {
     if (!confirm(`Are you sure you want to ${status} this request?`)) return;
     
-    $.post('<?= BASE_URL ?>/contact-request/respond', {
-        request_id: requestId,
-        status: status,
-        csrf_token: '<?= $csrf_token ?? '' ?>'
+    const formData = new FormData();
+    formData.append('request_id', requestId);
+    formData.append('status', status);
+    formData.append('csrf_token', '<?= $csrf_token ?? '' ?>');
+    
+    fetch('<?= BASE_URL ?>/contact-request/respond', {
+        method: 'POST',
+        body: formData
     })
-    .done(function(response) {
-        location.reload();
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to respond to request');
+        }
     })
-    .fail(function() {
+    .catch(error => {
+        console.error('Error:', error);
         alert('Failed to respond to request. Please try again.');
     });
 }

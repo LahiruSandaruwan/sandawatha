@@ -197,14 +197,13 @@ class UserModel extends BaseModel {
         $browser = $this->parseBrowser($userAgent);
         $device = $this->parseDevice($userAgent);
         
-        return $loginModel->create([
-            'user_id' => $userId,
-            'ip_address' => $ipAddress,
-            'user_agent' => $userAgent,
-            'browser' => $browser,
-            'device' => $device,
-            'login_time' => date('Y-m-d H:i:s')
-        ]);
+        return $loginModel->logLogin(
+            $userId,
+            $ipAddress,
+            $userAgent,
+            $browser,
+            $device
+        );
     }
     
     private function parseBrowser($userAgent) {

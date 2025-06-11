@@ -75,7 +75,8 @@ class ProfileController extends BaseController {
             if ($viewerId) {
                 require_once SITE_ROOT . '/app/models/ContactRequestModel.php';
                 $contactModel = new ContactRequestModel();
-                $contactStatus = $contactModel->getRequestBetweenUsers($viewerId, $userId);
+                $request = $contactModel->getRequestBetweenUsers($viewerId, $userId);
+                $contactStatus = $request ? $request['status'] : null;
             }
 
             $data = [
@@ -87,7 +88,7 @@ class ProfileController extends BaseController {
                 'contact_status' => $contactStatus,
                 'csrf_token' => $this->generateCsrf(),
                 'component_css' => ['profile/profile'],
-                'scripts' => ['profile/profile-view']
+                'scripts' => ['profile/profile-view', 'contact-requests']
             ];
 
             error_log("Rendering profile view with data: " . json_encode($data));

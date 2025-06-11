@@ -17,12 +17,32 @@ class ProfileModel extends BaseModel {
     }
     
     public function createProfile($userId, $data) {
-        $profileData = array_merge($data, [
-            'user_id' => $userId,
-            'created_at' => date('Y-m-d H:i:s')
-        ]);
-        
-        return $this->create($profileData);
+        try {
+            $this->db->beginTransaction();
+            
+            $profileData = array_merge($data, [
+                'user_id' => $userId,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+            
+            // Create the profile
+            $success = $this->create($profileData);
+            
+            if ($success) {
+                // Calculate and update profile completion
+                $this->updateProfileCompletion($userId);
+                $this->db->commit();
+                return true;
+            }
+            
+            $this->db->rollBack();
+            return false;
+            
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Error in createProfile: " . $e->getMessage());
+            return false;
+        }
     }
     
     public function findByUserId($userId) {

@@ -231,6 +231,9 @@
         <?php endforeach; ?>
     <?php endif; ?>
     
+    <!-- Contact Request Scripts -->
+    <script src="<?= BASE_URL ?>/assets/js/contact-requests.js"></script>
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Check for cookie consent

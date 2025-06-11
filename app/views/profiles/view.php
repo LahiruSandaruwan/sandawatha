@@ -2,6 +2,10 @@
 // Profile Header
 ?>
 <div class="container py-4">
+    <!-- Add BASE_URL and CSRF token -->
+    <meta name="base-url" content="<?= BASE_URL ?>">
+    <meta name="csrf-token" content="<?= $csrf_token ?>">
+    
     <div class="row">
         <!-- Profile Photo and Basic Info -->
         <div class="col-lg-4 mb-4">
@@ -61,20 +65,24 @@
                         <?php if ($_SESSION['user_id'] !== $profile['user_id']): ?>
                         <div class="d-grid gap-2">
                                 <?php if (isset($contact_status)): ?>
-                            <?php if ($contact_status === 'accepted'): ?>
+                                    <?php if ($contact_status === 'accepted'): ?>
                                         <button class="btn btn-success" disabled>
                                             <i class="bi bi-check-circle"></i> Connected
                                         </button>
-                            <?php elseif ($contact_status === 'pending'): ?>
-                                <button class="btn btn-warning" disabled>
+                                    <?php elseif ($contact_status === 'pending'): ?>
+                                        <button class="btn btn-warning" disabled>
                                             <i class="bi bi-clock"></i> Request Pending
-                                </button>
-                            <?php else: ?>
-                                        <button class="btn btn-primary" onclick="sendContactRequest(<?= $profile['user_id'] ?>)">
-                                            <i class="bi bi-person-plus"></i> Send Contact Request
-                                </button>
+                                        </button>
+                                    <?php elseif ($contact_status === 'rejected'): ?>
+                                        <button class="btn btn-danger" disabled>
+                                            <i class="bi bi-x-circle"></i> Request Rejected
+                                        </button>
                                     <?php endif; ?>
-                            <?php endif; ?>
+                                <?php else: ?>
+                                    <button class="btn btn-primary" onclick="sendContactRequest(<?= $profile['user_id'] ?>)">
+                                        <i class="bi bi-person-plus"></i> Send Contact Request
+                                    </button>
+                                <?php endif; ?>
                             
                             <button class="btn <?= $is_favorite ? 'btn-danger' : 'btn-outline-danger' ?> toggle-favorite" 
                                     data-user-id="<?= $profile['user_id'] ?>" 
@@ -289,38 +297,8 @@
     <?php endif; ?>
 </div>
 
-<?php if (isset($_SESSION['user_id'])): ?>
-<!-- Contact Request Modal -->
-<div class="modal fade" id="contactRequestModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Send Contact Request</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="contactRequestForm">
-                    <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
-                    <input type="hidden" name="profile_id" id="contactProfileId">
-                    
-                    <div class="mb-3">
-                        <label for="contactMessage" class="form-label">Message (Optional)</label>
-                        <textarea class="form-control" id="contactMessage" name="message" rows="3" 
-                                  placeholder="Introduce yourself and why you're interested..."></textarea>
-                        <div class="form-text">A personalized message increases your chances of acceptance.</div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitContactRequest()">
-                    <i class="bi bi-envelope"></i> Send Request
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
+<!-- Include Contact Request Modal -->
+<?php require_once SITE_ROOT . '/app/views/partials/contact-request-modal.php'; ?>
 
 <!-- JavaScript for handling contact requests and favorites -->
 <script>
@@ -392,4 +370,33 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-</script> 
+</script>
+
+<!-- Contact Request Modal -->
+<div class="modal fade" id="contactRequestModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Send Contact Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="contactRequestForm">
+                    <input type="hidden" name="profile_id" id="contactProfileId">
+                    <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Message (Optional)</label>
+                        <textarea class="form-control" id="message" name="message" rows="3" 
+                                placeholder="Write a brief message to introduce yourself..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitContactRequest()">Send Request</button>
+            </div>
+        </div>
+    </div>
+</div>
+</div> <!-- Close the main container -->
+</div> <!-- Close the main content wrapper --> 

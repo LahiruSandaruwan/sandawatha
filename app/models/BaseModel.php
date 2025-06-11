@@ -1,25 +1,12 @@
 <?php
+require_once __DIR__ . '/../../config/database.php';
+
 abstract class BaseModel {
     protected $db;
     protected $table;
     
     public function __construct() {
-        try {
-            $database = new Database();
-            $this->db = $database->connect();
-            
-            if (!$this->db) {
-                error_log("Failed to establish database connection in " . get_class($this));
-                throw new Exception("Database connection failed");
-            }
-            
-            // Set error mode to throw exceptions
-            $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            
-        } catch (Exception $e) {
-            error_log("Database connection error in " . get_class($this) . ": " . $e->getMessage());
-            throw $e;
-        }
+        $this->db = Database::getInstance()->getConnection();
     }
     
     protected function query($sql, $params = []) {
@@ -49,15 +36,30 @@ abstract class BaseModel {
             error_log("Parameters: " . json_encode($params));
             
             $stmt = $this->db->prepare($sql);
+            if (!$stmt) {
+                $error = $this->db->errorInfo();
+                error_log("Failed to prepare statement: " . $error[2]);
+                throw new PDOException("Failed to prepare statement: " . $error[2]);
+            }
             
             foreach ($params as $key => $value) {
                 $type = is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR;
                 error_log("Binding {$key} = " . var_export($value, true) . " (type: {$type})");
-                $stmt->bindValue($key, $value, $type);
+                if (!$stmt->bindValue($key, $value, $type)) {
+                    $error = $stmt->errorInfo();
+                    error_log("Failed to bind parameter {$key}: " . $error[2]);
+                    throw new PDOException("Failed to bind parameter {$key}: " . $error[2]);
+                }
             }
             
             $result = $stmt->execute();
             error_log("Query execution result: " . ($result ? "success" : "failed"));
+            
+            if (!$result) {
+                $error = $stmt->errorInfo();
+                error_log("Query execution failed: " . $error[2]);
+                throw new PDOException("Query execution failed: " . $error[2]);
+            }
             
             return $stmt;
         } catch (PDOException $e) {
@@ -126,8 +128,7 @@ abstract class BaseModel {
     }
     
     protected function getAllowedColumns() {
-        // Override this method in child classes to specify allowed columns
-        return ['id', 'created_at', 'updated_at'];
+        return [];
     }
     
     public function findAll($limit = null, $offset = 0) {
@@ -141,39 +142,72 @@ abstract class BaseModel {
         return $this->fetchAll($sql);
     }
     
-    public function create($data) {
-        $columns = array_keys($data);
-        $placeholders = array_map(function($col) { return ':' . $col; }, $columns);
+    protected function create($data) {
+        $allowedColumns = $this->getAllowedColumns();
+        $filteredData = array_intersect_key($data, array_flip($allowedColumns));
         
-        $sql = "INSERT INTO {$this->table} (" . implode(', ', $columns) . ") 
-                VALUES (" . implode(', ', $placeholders) . ")";
-        
-        $params = [];
-        foreach ($data as $key => $value) {
-            $params[':' . $key] = $value;
+        if (empty($filteredData)) {
+            throw new Exception('No valid data provided');
         }
         
-        $this->execute($sql, $params);
-        return $this->db->lastInsertId();
+        $columns = implode(', ', array_keys($filteredData));
+        $placeholders = implode(', ', array_map(function($key) {
+            return ":{$key}";
+        }, array_keys($filteredData)));
+        
+        $sql = "INSERT INTO {$this->table} ({$columns}) VALUES ({$placeholders})";
+        
+        try {
+            $params = array_combine(
+                array_map(function($key) { return ":{$key}"; }, array_keys($filteredData)),
+                array_values($filteredData)
+            );
+            
+            $this->execute($sql, $params);
+            return $this->db->lastInsertId();
+        } catch (PDOException $e) {
+            error_log("Database error in create(): " . $e->getMessage());
+            throw $e;
+        }
     }
     
-    public function update($id, $data) {
-        $columns = array_keys($data);
-        $setClause = array_map(function($col) { return $col . ' = :' . $col; }, $columns);
+    protected function update($id, $data) {
+        $allowedColumns = $this->getAllowedColumns();
+        $filteredData = array_intersect_key($data, array_flip($allowedColumns));
         
-        $sql = "UPDATE {$this->table} SET " . implode(', ', $setClause) . " WHERE id = :id";
-        
-        $params = [':id' => $id];
-        foreach ($data as $key => $value) {
-            $params[':' . $key] = $value;
+        if (empty($filteredData)) {
+            throw new Exception('No valid data provided');
         }
         
-        return $this->execute($sql, $params);
+        $setClause = implode(', ', array_map(function($key) {
+            return "{$key} = :{$key}";
+        }, array_keys($filteredData)));
+        
+        $sql = "UPDATE {$this->table} SET {$setClause} WHERE id = :id";
+        
+        try {
+            $params = array_combine(
+                array_map(function($key) { return ":{$key}"; }, array_keys($filteredData)),
+                array_values($filteredData)
+            );
+            $params[':id'] = $id;
+            
+            return $this->execute($sql, $params);
+        } catch (PDOException $e) {
+            error_log("Database error in update(): " . $e->getMessage());
+            throw $e;
+        }
     }
     
-    public function delete($id) {
+    protected function delete($id) {
         $sql = "DELETE FROM {$this->table} WHERE id = :id";
-        return $this->execute($sql, [':id' => $id]);
+        
+        try {
+            return $this->execute($sql, [':id' => $id]);
+        } catch (PDOException $e) {
+            error_log("Database error in delete(): " . $e->getMessage());
+            throw $e;
+        }
     }
     
     public function count($where = null, $params = []) {
@@ -214,6 +248,27 @@ abstract class BaseModel {
             'has_next' => $page < $totalPages,
             'has_prev' => $page > 1
         ];
+    }
+    
+    protected function beginTransaction() {
+        if (!$this->db->inTransaction()) {
+            return $this->db->beginTransaction();
+        }
+        return true;
+    }
+    
+    protected function commit() {
+        if ($this->db->inTransaction()) {
+            return $this->db->commit();
+        }
+        return true;
+    }
+    
+    protected function rollback() {
+        if ($this->db->inTransaction()) {
+            return $this->db->rollBack();
+        }
+        return true;
     }
 }
 ?>

@@ -1,16 +1,19 @@
 <?php
+// Define the site root path
+define('SITE_ROOT', dirname(__DIR__));
+
 // Configure session first, before starting it
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
 ini_set('session.cookie_secure', isset($_SERVER['HTTPS']));
 ini_set('session.cookie_samesite', 'Lax');
 
-require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../config/upload.php';
-require_once __DIR__ . '/../routes/router.php';
+// Load configuration and required files
+require_once SITE_ROOT . '/config/config.php';
+require_once SITE_ROOT . '/config/database.php';
+require_once SITE_ROOT . '/app/helpers/functions.php';
 
-// Start session
+// Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -52,7 +55,9 @@ header('X-XSS-Protection: 1; mode=block');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
 
-// Initialize and dispatch router
+// Initialize router
+require_once SITE_ROOT . '/routes/router.php';
+
+// Create router instance and dispatch
 $router = new Router();
 $router->dispatch();
-?>
