@@ -2,9 +2,9 @@
 // Profile Header
 ?>
 <div class="container py-4">
-    <!-- Add BASE_URL and CSRF token -->
+    <!-- Add BASE_URL only, remove CSRF token meta tag -->
     <meta name="base-url" content="<?= BASE_URL ?>">
-    <meta name="csrf-token" content="<?= $csrf_token ?>">
+    <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
     
     <div class="row">
         <!-- Profile Photo and Basic Info -->
@@ -85,8 +85,7 @@
                                 <?php endif; ?>
                             
                             <button class="btn <?= $is_favorite ? 'btn-danger' : 'btn-outline-danger' ?> toggle-favorite" 
-                                    data-user-id="<?= $profile['user_id'] ?>" 
-                                    data-csrf="<?= $csrf_token ?>">
+                                    data-profile-id="<?= $profile['user_id'] ?>">
                                 <i class="bi bi-heart<?= $is_favorite ? '-fill' : '' ?>"></i> 
                                 <?= $is_favorite ? 'Remove from Favorites' : 'Add to Favorites' ?>
                             </button>

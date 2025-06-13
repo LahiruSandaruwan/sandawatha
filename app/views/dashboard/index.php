@@ -57,7 +57,16 @@
                 <div class="d-flex align-items-center">
                     <i class="bi bi-eye-fill display-6 me-3"></i>
                     <div>
-                        <h3 class="mb-0"><?= $profile['view_count'] ?? 0 ?></h3>
+                        <h3 class="mb-0">
+                            <?php
+                            if (!empty($profile_views)) {
+                                $totalViews = array_sum(array_column($profile_views, 'views'));
+                                echo $totalViews;
+                            } else {
+                                echo $profile['view_count'] ?? 0;
+                            }
+                            ?>
+                        </h3>
                         <small>Profile Views</small>
                     </div>
                 </div>

@@ -3,6 +3,9 @@
 // CSRF Token for AJAX requests
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
+// Base URL for AJAX requests
+const BASE_URL = document.querySelector('meta[name="base-url"]')?.content || '';
+
 // Global AJAX setup
 $.ajaxSetup({
     headers: {
@@ -190,27 +193,48 @@ function submitContactRequest() {
 
 function toggleFavorite(profileId) {
     const btn = document.querySelector(`[data-profile-id="${profileId}"]`);
+    if (!btn) {
+        showAlert('Favorite button not found.', 'error');
+        return;
+    }
     const isFavorite = btn.classList.contains('btn-danger');
-    
     const url = isFavorite ? '/favorites/remove' : '/favorites/add';
-    
-    $.post(url, { profile_id: profileId })
-        .done(function(response) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    if (!csrfToken) {
+        showAlert('Security token not found. Please refresh the page.', 'error');
+        return;
+    }
+    const formData = new URLSearchParams();
+    formData.append('profile_id', profileId);
+    formData.append('csrf_token', csrfToken);
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
             if (isFavorite) {
                 btn.classList.remove('btn-danger');
                 btn.classList.add('btn-outline-danger');
-                btn.innerHTML = '<i class="bi bi-heart"></i>';
+                btn.innerHTML = '<i class="bi bi-heart"></i> Add to Favorites';
                 showAlert('Removed from favorites', 'info');
             } else {
                 btn.classList.remove('btn-outline-danger');
                 btn.classList.add('btn-danger');
-                btn.innerHTML = '<i class="bi bi-heart-fill"></i>';
+                btn.innerHTML = '<i class="bi bi-heart-fill"></i> Remove from Favorites';
                 showAlert('Added to favorites', 'success');
             }
-        })
-        .fail(function() {
-            showAlert('Action failed. Please try again.', 'error');
-        });
+        } else {
+            showAlert(data.message || 'Action failed. Please try again.', 'error');
+        }
+    })
+    .catch(error => {
+        showAlert('Action failed. Please try again.', 'error');
+        console.error('Favorite request failed:', error);
+    });
 }
 
 function updateContactButton(profileId, status) {
@@ -521,8 +545,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Performance monitoring
 window.addEventListener('load', function() {
-    if (window.performance && window.performance.timing) {
-        const loadTime = window.performance.timing.loadEventEnd - window.performance.timing.navigationStart;
+    const perfData = window.performance.getEntriesByType('navigation')[0];
+    if (perfData) {
+        const loadTime = Math.round(perfData.loadEventEnd - perfData.navigationStart);
         console.log('Page load time:', loadTime + 'ms');
     }
 });

@@ -1,6 +1,3 @@
-// Get BASE_URL from meta tag
-const BASE_URL = document.querySelector('meta[name="base-url"]')?.content || '';
-
 // Contact Request Response Functions
 function respondToRequest(requestId, status) {
     console.log('Responding to request:', { requestId, status });

@@ -6,6 +6,7 @@
     margin-bottom: 1.5rem;
     transition: all 0.3s ease;
     border-left: 4px solid var(--primary-color);
+    color: #222 !important;
 }
 
 .stat-card:hover {
@@ -21,7 +22,7 @@
 }
 
 .stat-label {
-    color: var(--secondary-color);
+    color: #444 !important;
     font-size: 0.875rem;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -49,6 +50,7 @@
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
+    color: #222 !important;
 }
 
 .premium-plan.featured {
@@ -85,6 +87,7 @@
     background: white;
     border-radius: 0 15px 15px 0;
     transition: all 0.3s ease;
+    color: #222 !important;
 }
 
 .activity-item:hover {
@@ -109,7 +112,7 @@
 
 .activity-time {
     font-size: 0.75rem;
-    color: var(--secondary-color);
+    color: #444 !important;
 }
 
 /* Dark Mode Styles */
@@ -146,4 +149,46 @@
     .activity-item {
         padding: 0.75rem;
     }
+}
+
+.dashboard-section-title, .section-title {
+    color: #222 !important;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.dashboard-label {
+    color: #333 !important;
+    font-weight: 500;
+}
+
+.dashboard-card {
+    background: #fff !important;
+    color: #222 !important;
+    border-radius: 15px;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn, .btn-primary, .btn-heart {
+    color: #fff !important;
+    font-weight: bold;
+}
+
+.welcome-banner {
+    background: #fff !important;
+    color: #222 !important;
+    box-shadow: var(--shadow-sm);
+    border-radius: 18px;
+    margin-bottom: 1.5rem;
+}
+.welcome-banner h2, .welcome-banner p {
+    color: #222 !important;
+    font-weight: 600;
+}
+[data-bs-theme="dark"] .welcome-banner {
+    background: linear-gradient(90deg, #22223b 0%, #3a3a5a 100%) !important;
+    color: #fff !important;
+}
+[data-bs-theme="dark"] .welcome-banner h2, [data-bs-theme="dark"] .welcome-banner p {
+    color: #fff !important;
 } 

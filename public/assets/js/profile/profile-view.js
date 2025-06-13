@@ -1,25 +1,50 @@
-// Get BASE_URL from meta tag
-const BASE_URL = document.querySelector('meta[name="base-url"]')?.content || '';
-
 // Contact Request Functions are now handled in app.js
+
+// Initialize event handlers
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle favorite button clicks
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.toggle-favorite');
+        if (btn) {
+            e.preventDefault();
+            const profileId = btn.dataset.profileId;
+            toggleFavorite(profileId);
+        }
+    });
+});
 
 // Favorite Functions
 function toggleFavorite(profileId) {
-    const action = document.querySelector(`button[onclick="toggleFavorite(${profileId})"]`).classList.contains('btn-danger') 
-        ? 'remove' 
-        : 'add';
+    const btn = document.querySelector(`button[data-profile-id="${profileId}"]`);
+    if (!btn) {
+        showAlert('Favorite button not found.', 'error');
+        return;
+    }
+
+    const action = btn.classList.contains('btn-danger') ? 'remove' : 'add';
+    const csrfToken = document.querySelector('input[name="csrf_token"]')?.value;
+    
+    if (!csrfToken) {
+        showAlert('Security token not found. Please refresh the page.', 'error');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('profile_id', profileId);
+    formData.append('csrf_token', csrfToken);
     
     fetch(BASE_URL + '/favorites/' + action, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'profile_id=' + profileId + '&csrf_token=' + document.querySelector('input[name="csrf_token"]').value
+        body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            const btn = document.querySelector(`button[onclick="toggleFavorite(${profileId})"]`);
             const icon = btn.querySelector('i');
             
             if (action === 'add') {
@@ -38,7 +63,7 @@ function toggleFavorite(profileId) {
             
             showAlert(data.message, 'success');
         } else {
-            showAlert(data.message, 'error');
+            showAlert(data.message || 'Failed to update favorite status', 'error');
         }
     })
     .catch(error => {
