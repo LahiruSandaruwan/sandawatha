@@ -23,7 +23,7 @@ document.body.dataset.profilePhoto = '<?= htmlspecialchars($_SESSION['profile_ph
             <div class="user-name fw-bold"></div>
             <small class="last-active text-muted"></small>
         </div>
-    </div>
+                    </div>
 </template>
 
 <div class="container-fluid py-4">
@@ -62,19 +62,19 @@ document.body.dataset.profilePhoto = '<?= htmlspecialchars($_SESSION['profile_ph
                     <div id="no-users-message" class="text-center py-4 text-muted">
                         <i class="bi bi-people"></i>
                         <p class="mb-0">No users online</p>
-                    </div>
+        </div>
                     <div id="connected-users" class="connected-users-list list-group list-group-flush">
                         <!-- Connected users will be inserted here -->
                     </div>
                 </div>
             </div>
-            
+
             <!-- Back to Messages -->
             <div class="mt-3">
                 <a href="<?= BASE_URL ?>/messages" class="btn btn-outline-secondary w-100">
                     <i class="bi bi-arrow-left"></i> Back to Messages
-                </a>
-            </div>
+                                    </a>
+                                </div>
             </div>
         </div>
 
@@ -87,12 +87,12 @@ document.body.dataset.profilePhoto = '<?= htmlspecialchars($_SESSION['profile_ph
                         <?php if (!empty($other_user['profile_photo'])): ?>
                             <img src="<?= UPLOAD_URL . htmlspecialchars($other_user['profile_photo']) ?>" 
                                  alt="Profile" class="rounded-circle me-3" width="40" height="40">
-                        <?php else: ?>
+                                        <?php else: ?>
                             <div class="bg-secondary rounded-circle me-3 d-flex align-items-center justify-content-center" 
                                  style="width: 40px; height: 40px;">
                                 <i class="bi bi-person text-white"></i>
                             </div>
-                        <?php endif; ?>
+                                        <?php endif; ?>
                         <div>
                             <h5 class="mb-0"><?= htmlspecialchars($other_user['first_name'] . ' ' . ($other_user['last_name'] ?? '')) ?></h5>
                             <small class="text-muted">
@@ -118,7 +118,7 @@ document.body.dataset.profilePhoto = '<?= htmlspecialchars($_SESSION['profile_ph
                             <i class="bi bi-chat-dots display-1"></i>
                             <h5 class="mt-3">Start a conversation</h5>
                             <p>Send a message to start chatting with <?= htmlspecialchars($other_user['first_name']) ?></p>
-                        </div>
+            </div>
                     <?php else: ?>
                         <?php foreach ($messages as $message): ?>
                             <div class="message mb-3 <?= $message['sender_id'] == $current_user_id ? 'sent' : 'received' ?>">
@@ -127,18 +127,18 @@ document.body.dataset.profilePhoto = '<?= htmlspecialchars($_SESSION['profile_ph
                                          style="max-width: 70%;">
                                         <?php if (!empty($message['subject']) && $message['subject'] !== 'Chat Message'): ?>
                                             <div class="fw-bold mb-1"><?= htmlspecialchars($message['subject']) ?></div>
-                                        <?php endif; ?>
+        <?php endif; ?>
                                         <div><?= nl2br(htmlspecialchars($message['message'])) ?></div>
                                         <small class="d-block mt-2 <?= $message['sender_id'] == $current_user_id ? 'text-white-50' : 'text-muted' ?>">
                                             <?= date('M j, Y g:i A', strtotime($message['created_at'])) ?>
                                         </small>
-                                    </div>
-                                </div>
-                            </div>
+    </div>
+</div>
+                    </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
-
+                
                 <!-- Message Input -->
                 <div class="card-footer">
                     <form id="messageForm" class="d-flex">
@@ -152,8 +152,8 @@ document.body.dataset.profilePhoto = '<?= htmlspecialchars($_SESSION['profile_ph
                         <div class="align-self-end">
                             <button id="sendButton" type="submit" class="btn btn-primary">
                                 <i class="bi bi-send"></i> Send
-                            </button>
-                        </div>
+                        </button>
+                    </div>
                     </form>
                 </div>
             </div>
