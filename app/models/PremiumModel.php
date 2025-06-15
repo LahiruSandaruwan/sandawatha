@@ -4,6 +4,14 @@ require_once 'BaseModel.php';
 class PremiumModel extends BaseModel {
     protected $table = 'premium_memberships';
     
+    protected function getAllowedColumns() {
+        return [
+            'user_id', 'plan_type', 'plan_name', 'price_lkr', 'duration_months',
+            'features', 'start_date', 'end_date', 'status', 'payment_method',
+            'transaction_id', 'created_at', 'updated_at'
+        ];
+    }
+    
     public function createMembership($userId, $planType, $durationMonths = 1) {
         $plans = [
             'basic' => ['name' => 'Basic Plan', 'price' => 500],

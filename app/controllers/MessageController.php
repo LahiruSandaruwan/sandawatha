@@ -2,6 +2,7 @@
 require_once 'BaseController.php';
 require_once SITE_ROOT . '/app/models/MessageModel.php';
 require_once SITE_ROOT . '/app/models/PremiumModel.php';
+require_once SITE_ROOT . '/app/models/ProfileModel.php';
 
 class MessageController extends BaseController {
     private $messageModel;
@@ -18,6 +19,14 @@ class MessageController extends BaseController {
             $this->redirect('/login');
         }
         
+        // Load user profile information
+        $profileModel = new ProfileModel();
+        $userProfile = $profileModel->findByUserId($currentUser['id']);
+        
+        // Set user profile information in session
+        $_SESSION['first_name'] = $userProfile['first_name'] ?? '';
+        $_SESSION['last_name'] = $userProfile['last_name'] ?? '';
+        
         $tab = $_GET['tab'] ?? 'inbox';
         $page = $_GET['page'] ?? 1;
         $search = $_GET['search'] ?? '';
@@ -27,11 +36,9 @@ class MessageController extends BaseController {
         $adminMessages = [];
         $conversations = [];
         $stats = [];
-        $unreadCount = 0;
         
         if ($tab === 'inbox' || $tab === 'all') {
             $messages = $this->messageModel->getInboxMessages($currentUser['id'], $page, 20, $search);
-            $unreadCount = $this->messageModel->getUnreadCount($currentUser['id']);
         }
         
         if ($tab === 'sent' || $tab === 'all') {
@@ -48,23 +55,27 @@ class MessageController extends BaseController {
         
         $stats = $this->messageModel->getMessageStats($currentUser['id']);
         
-        $data = [
-            'title' => 'Messages - Sandawatha.lk',
+        $this->layout('main', 'messages/inbox', [
             'messages' => $messages,
-            'sent_messages' => $sentMessages,
-            'admin_messages' => $adminMessages,
+            'sentMessages' => $sentMessages,
+            'adminMessages' => $adminMessages,
             'conversations' => $conversations,
             'stats' => $stats,
-            'unread_count' => $unreadCount,
             'current_tab' => $tab,
-            'current_page' => $page,
-            'search_query' => $search,
-            'csrf_token' => $this->generateCsrf(),
-            'component_css' => ['chat/chat'],
-            'scripts' => ['chat/messages']
-        ];
-        
-        $this->layout('main', 'messages/inbox', $data);
+            'search' => $search,
+            'title' => 'Messages - Sandawatha.lk',
+            'description' => 'View and manage your messages on Sandawatha.lk',
+            'component_css' => [
+                'chat/chat',
+                'chat/connected-users'
+            ],
+            'scripts' => [
+                'chat/chat',
+                'chat/connected-users'
+            ],
+            'unread_count' => $stats['unread'] ?? 0,
+            'csrf_token' => $this->generateCsrf()
+        ]);
     }
     
     public function viewMessage($messageId) {
@@ -269,6 +280,43 @@ class MessageController extends BaseController {
         } catch (Exception $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
+    }
+    
+    public function chat($userId) {
+        $currentUser = $this->getCurrentUser();
+        if (!$currentUser) {
+            $this->redirect('/login');
+        }
+        
+        // Load user profile information
+        $profileModel = new ProfileModel();
+        $userProfile = $profileModel->findByUserId($currentUser['id']);
+        $otherUserProfile = $profileModel->getProfileWithUser($userId, $currentUser['id']);
+        
+        if (!$otherUserProfile) {
+            $this->redirectWithMessage('/messages', 'User not found.', 'error');
+        }
+        
+        // Set user profile information in session
+        $_SESSION['first_name'] = $userProfile['first_name'] ?? '';
+        $_SESSION['last_name'] = $userProfile['last_name'] ?? '';
+        
+        // Get conversation history between these two users
+        $messages = $this->messageModel->getConversationBetweenUsers($currentUser['id'], $userId);
+        
+        
+        $this->layout('main', 'messages/chat', [
+            'other_user' => $otherUserProfile,
+            'messages' => $messages,
+            'current_user_id' => $currentUser['id'],
+            'csrf_token' => $this->generateCsrf(),
+            'title' => 'Chat with ' . htmlspecialchars($otherUserProfile['first_name']) . ' - Sandawatha.lk',
+            'description' => 'Chat with ' . htmlspecialchars($otherUserProfile['first_name']) . ' on Sandawatha.lk',
+            'component_css' => [
+                'chat/chat',
+                'chat/connected-users'
+            ]
+        ]);
     }
 }
 ?>
