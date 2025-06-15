@@ -1,11 +1,11 @@
 # Major Issues and Limitations
 
 ## Security Concerns
-1. No rate limiting implemented for authentication attempts
-2. Missing CSRF protection in forms
-3. File upload validation needs strengthening
-4. Session management could be improved
-5. Password reset functionality lacks proper security measures
+1. ✅ Rate limiting implemented for authentication attempts
+2. ✅ Enhanced CSRF protection with token regeneration
+3. ✅ Improved file upload validation with mime type checking
+4. Session management improved with periodic regeneration
+5. Password reset functionality needs improvement
 
 ## Architecture Issues
 1. Direct database queries in controllers instead of using models
@@ -61,4 +61,11 @@
 2. Limited search filters
 3. Basic chat functionality without advanced features
 4. No proper notification system
-5. Limited profile customization options 
+5. Limited profile customization options
+
+## New Issues Identified
+1. Redis dependency for rate limiting needs fallback mechanism
+2. File upload validation needs to be implemented across all controllers
+3. Session storage needs to be configured for better security
+4. Need to implement proper error logging and monitoring
+5. Need to add proper API documentation for all endpoints 
