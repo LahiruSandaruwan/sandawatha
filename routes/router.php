@@ -97,6 +97,13 @@ class Router {
         $this->addRoute('GET', '/api/religions', 'ApiController', 'religions');
         $this->addRoute('GET', '/api/castes', 'ApiController', 'castes');
         $this->addRoute('POST', '/api/check-compatibility', 'ApiController', 'checkCompatibility', ['auth']);
+        
+        // Chat routes
+        $this->addRoute('GET', '/messages/chat/([0-9]+)', 'MessageController', 'chat', ['auth']);
+        $this->addRoute('POST', '/chat/send-message', 'ChatController', 'sendMessage', ['auth']);
+        $this->addRoute('POST', '/chat/initiate-call', 'ChatController', 'initiateCall', ['auth']);
+        $this->addRoute('POST', '/chat/update-call-status', 'ChatController', 'updateCallStatus', ['auth']);
+        $this->addRoute('POST', '/chat/update-online-status', 'ChatController', 'updateOnlineStatus', ['auth']);
     }
     
     public function addRoute($method, $pattern, $controller, $action, $middlewares = []) {

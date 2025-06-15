@@ -8,13 +8,18 @@ RewriteEngine On
 # Set the base directory
 RewriteBase /
 
+# Allow direct access to assets (map /assets/ to /public/assets/)
+RewriteCond %{REQUEST_URI} ^/assets/(.*)$
+RewriteCond %{DOCUMENT_ROOT}/sandawatha/public/assets/%1 -f
+RewriteRule ^assets/(.*)$ public/assets/$1 [L]
+
+# Allow direct access to uploads (map /uploads/ to /public/uploads/)
+RewriteCond %{REQUEST_URI} ^/uploads/(.*)$
+RewriteCond %{DOCUMENT_ROOT}/sandawatha/public/uploads/%1 -f
+RewriteRule ^uploads/(.*)$ public/uploads/$1 [L]
+
 # Allow direct access to files in public directory
 RewriteCond %{REQUEST_URI} ^/public/
-RewriteCond %{REQUEST_FILENAME} -f
-RewriteRule ^ - [L]
-
-# Allow direct access to uploaded files
-RewriteCond %{REQUEST_URI} ^/uploads/
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 

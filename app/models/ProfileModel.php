@@ -46,12 +46,31 @@ class ProfileModel extends BaseModel {
     }
     
     public function findByUserId($userId) {
-        $sql = "SELECT p.*, u.email, u.phone, u.status as user_status
-                FROM {$this->table} p
-                LEFT JOIN users u ON p.user_id = u.id
-                WHERE p.user_id = :user_id";
-        
-        return $this->fetchOne($sql, [':user_id' => $userId]);
+        try {
+            $sql = "SELECT p.*, u.email, u.phone, u.status as user_status
+                    FROM users u
+                    LEFT JOIN {$this->table} p ON p.user_id = u.id
+                    WHERE u.id = :user_id";
+            
+            $profile = $this->fetchOne($sql, [':user_id' => $userId]);
+            
+            // If no profile exists, return default values
+            if (!$profile || !isset($profile['first_name'])) {
+                return [
+                    'user_id' => $userId,
+                    'first_name' => 'User',
+                    'last_name' => $userId,
+                    'email' => $profile['email'] ?? '',
+                    'phone' => $profile['phone'] ?? '',
+                    'user_status' => $profile['user_status'] ?? 'active'
+                ];
+            }
+            
+            return $profile;
+        } catch (Exception $e) {
+            error_log("Error in findByUserId: " . $e->getMessage());
+            return null;
+        }
     }
     
     public function updateProfile($userId, $data) {
@@ -116,6 +135,7 @@ class ProfileModel extends BaseModel {
             $publicProfile = [
                 'user_id' => $profile['user_id'],
                 'first_name' => $profile['first_name'],
+                'last_name' => $profile['last_name'],
                 'age' => $profile['age'],
                 'district' => $profile['district'],
                 'religion' => $profile['religion'],

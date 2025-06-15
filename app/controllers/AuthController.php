@@ -64,6 +64,8 @@ class AuthController extends BaseController {
         $_SESSION['user_role'] = $user['role'];
         $_SESSION['dark_mode'] = $user['dark_mode'];
         $_SESSION['user_name'] = $profile ? trim($profile['first_name'] . ' ' . $profile['last_name']) : null;
+        $_SESSION['first_name'] = $profile ? $profile['first_name'] : '';
+        $_SESSION['last_name'] = $profile ? $profile['last_name'] : '';
         
         // Log the login
         $this->userModel->logLogin(
