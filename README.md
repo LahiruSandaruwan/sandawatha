@@ -2,6 +2,77 @@
 
 A modern matrimonial platform built for Sri Lankans. Find your perfect life partner through AI-powered matching, horoscope compatibility, and secure communication.
 
+## Current Features
+
+### User Management
+- User registration and authentication
+- Profile creation and management
+- Profile verification system
+- Password reset functionality
+- User preferences and settings
+
+### Profile Features
+- Detailed profile creation
+- Photo upload and management
+- Basic profile search
+- Profile favorites system
+- Profile blocking functionality
+
+### Communication
+- Basic messaging system
+- Chat functionality
+- Message notifications
+- Contact form for support
+
+### Premium Features
+- Premium membership system
+- Enhanced profile visibility
+- Advanced search filters
+- Priority messaging
+
+### Admin Features
+- User management dashboard
+- Content moderation
+- Report handling
+- Basic analytics
+
+## Upcoming Features
+
+### Enhanced Matching
+- Advanced AI-powered matching algorithm
+- Horoscope compatibility checking
+- Personality matching system
+- Location-based matching
+- Interest-based matching
+
+### Communication Improvements
+- Video chat integration
+- Voice messages
+- Message encryption
+- Read receipts
+- Message scheduling
+
+### User Experience
+- Dark mode implementation
+- Mobile app development
+- Progressive Web App (PWA) support
+- Multi-language support
+- Accessibility improvements
+
+### Security & Privacy
+- Two-factor authentication
+- Enhanced privacy controls
+- Profile verification badges
+- Secure file sharing
+- Activity logging
+
+### Premium Features
+- Virtual gifts system
+- Profile highlighting
+- Priority customer support
+- Advanced analytics
+- Custom profile themes
+
 ## Features
 
 - AI-powered profile matching
