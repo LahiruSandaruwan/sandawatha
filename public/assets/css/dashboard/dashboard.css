@@ -115,21 +115,174 @@
     color: #444 !important;
 }
 
-/* Dark Mode Styles */
-[data-bs-theme="dark"] .stat-card {
-    background-color: #2b3035;
+/* Suggested Matches Section */
+.card {
+    border-radius: 15px;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    margin-bottom: 1.5rem;
 }
 
-[data-bs-theme="dark"] .premium-plan {
-    background-color: #2b3035;
+.card-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 1rem 1.25rem;
+    border-radius: 15px 15px 0 0 !important;
 }
 
-[data-bs-theme="dark"] .activity-item {
-    background-color: #2b3035;
+.card-header h5 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-[data-bs-theme="dark"] .activity-icon {
-    background-color: #343a40;
+.card-body {
+    padding: 1.25rem;
+}
+
+/* Match Cards */
+.card .border {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    border: 1px solid #e0e0e0 !important;
+    background: #ffffff;
+}
+
+.card .border:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.card .card-body {
+    padding: 1rem !important;
+}
+
+/* Profile Image */
+.rounded-circle {
+    border: 2px solid #e0e0e0;
+    object-fit: cover;
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+
+/* Text Styles */
+.card h6 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.text-muted {
+    color: #6c757d !important;
+}
+
+/* Buttons */
+.btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.875rem;
+    border-radius: 8px;
+}
+
+.btn-primary {
+    background-color: #4e73df;
+    border-color: #4e73df;
+    color: white !important;
+}
+
+.btn-primary:hover {
+    background-color: #3756a4;
+    border-color: #3756a4;
+}
+
+.btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+/* Favorite Button - matching View button style */
+.card .card-body .btn.btn-outline-danger.btn-favorite {
+    padding: 0.4rem 1rem;
+    height: auto;
+    width: auto;
+    min-width: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #dc3545;
+    border: 1px solid #dc3545;
+    color: #fff;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.card .card-body .btn.btn-outline-danger.btn-favorite:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    color: #fff;
+}
+
+.card .card-body .btn.btn-outline-danger.btn-favorite.active {
+    background-color: #bd2130;
+    border-color: #b21f2d;
+    color: #fff;
+}
+
+.card .card-body .btn.btn-outline-danger.btn-favorite i {
+    font-size: 1rem;
+    margin-right: 0.25rem;
+}
+
+/* Dark mode */
+[data-bs-theme="dark"] .card .card-body .btn.btn-outline-danger.btn-favorite {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: #fff;
+}
+
+[data-bs-theme="dark"] .card .card-body .btn.btn-outline-danger.btn-favorite:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+[data-bs-theme="dark"] .card .card-body .btn.btn-outline-danger.btn-favorite.active {
+    background-color: #bd2130;
+    border-color: #b21f2d;
+}
+
+/* Dark mode adjustments */
+[data-bs-theme="dark"] .suggested-matches {
+    background: #2b3035;
+}
+
+[data-bs-theme="dark"] .match-card {
+    background: #343a40;
+    border-color: #495057;
+}
+
+[data-bs-theme="dark"] .match-name {
+    color: #e9ecef;
+}
+
+[data-bs-theme="dark"] .match-location {
+    color: #adb5bd;
+}
+
+[data-bs-theme="dark"] .section-title {
+    color: #e9ecef !important;
+    border-bottom-color: #495057;
 }
 
 /* Responsive Styles */
@@ -191,4 +344,4 @@
 }
 [data-bs-theme="dark"] .welcome-banner h2, [data-bs-theme="dark"] .welcome-banner p {
     color: #fff !important;
-} 
+}

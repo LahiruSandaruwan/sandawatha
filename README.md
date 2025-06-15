@@ -44,7 +44,10 @@ cd sandawatha
 
 3. Set up the database:
    - Create a new MySQL database
-   - Import the schema from `sql/schema.sql`
+   - Import the base schema:
+     ```bash
+     mysql -u your_user -p your_database < sql/schema.sql
+     ```
    - Copy `config/database.example.php` to `config/database.php`
    - Update database credentials in `config/database.php`
 
@@ -55,26 +58,32 @@ cd sandawatha
 5. Set proper permissions:
 ```bash
 chmod -R 755 .
-chmod -R 777 public/assets/images/uploads
+chmod -R 777 public/uploads
 ```
 
 ## Project Structure
 
 ```
 sandawatha/
-├── app/
-│   ├── controllers/    # Application controllers
-│   ├── models/         # Database models
-│   └── views/          # View templates
-├── config/            # Configuration files
-├── public/            # Public assets
-│   ├── assets/
-│   │   ├── css/      # Stylesheets
-│   │   ├── js/       # JavaScript files
-│   │   └── images/   # Image assets
-│   └── index.php     # Front controller
-├── routes/           # Route definitions
-└── sql/             # Database schemas
+├── app/                    # Application core
+│   ├── controllers/       # Application controllers
+│   ├── models/           # Database models
+│   ├── views/            # View templates
+│   └── helpers/          # Helper functions
+├── config/               # Configuration files
+├── public/               # Web root directory
+│   ├── assets/          # Static assets
+│   │   ├── css/        # Stylesheets
+│   │   ├── js/         # JavaScript files
+│   │   └── images/     # Image assets
+│   ├── uploads/        # User uploaded content
+│   └── index.php       # Front controller
+├── routes/              # Route definitions
+├── sql/                # Database schemas and migrations
+│   ├── schema.sql     # Base database schema
+│   └── migrations/    # Database migrations
+└── logs/               # Application logs
+
 ```
 
 ## Development
@@ -85,9 +94,9 @@ We use a branching model for development:
 - `develop` - Development branch
 - `feature/*` - Feature branches
 
-To contribute:
+### Development Workflow
 
-1. Create a new feature branch from develop:
+1. Create a new feature branch:
 ```bash
 git checkout develop
 git checkout -b feature/your-feature-name
@@ -99,31 +108,18 @@ git add .
 git commit -m "Description of changes"
 ```
 
-3. Push your branch and create a pull request:
+3. Push your changes and create a pull request:
 ```bash
 git push origin feature/your-feature-name
 ```
 
-## Security
+## Database Migrations
 
-- All user passwords are hashed using bcrypt
-- CSRF protection is implemented
-- SQL injection prevention through prepared statements
-- XSS protection
-- Rate limiting on sensitive endpoints
+To run database migrations:
+```bash
+php migrate.php
+```
 
 ## License
 
-This project is proprietary software. All rights reserved.
-
-## Contact
-
-For support or inquiries, please contact:
-- Email: [your-email@example.com]
-- Website: [https://sandawatha.lk]
-
-## Acknowledgments
-
-- Bootstrap team for the excellent UI framework
-- jQuery team for the JavaScript library
-- All contributors who have helped with the project 
+Copyright © 2025 Sandawatha.lk. All rights reserved.

@@ -233,8 +233,8 @@
                                             <a href="<?= BASE_URL ?>/profile/<?= $match['user_id'] ?>" class="btn btn-sm btn-primary me-2">
                                                 <i class="bi bi-eye"></i> View
                                             </a>
-                                            <button class="btn btn-sm btn-outline-danger" onclick="toggleFavorite(<?= $match['user_id'] ?>)">
-                                                <i class="bi bi-heart"></i>
+                                            <button class="btn btn-sm btn-outline-danger btn-favorite <?= isset($match['is_favorite']) && $match['is_favorite'] ? 'active' : '' ?>" onclick="toggleFavorite(<?= $match['user_id'] ?>)">
+                                                <i class="bi <?= isset($match['is_favorite']) && $match['is_favorite'] ? 'bi-heart-fill' : 'bi-heart' ?>"></i>
                                             </button>
                                         </div>
                                     </div>
