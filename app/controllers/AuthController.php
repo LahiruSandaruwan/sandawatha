@@ -2,12 +2,15 @@
 require_once 'BaseController.php';
 require_once SITE_ROOT . '/app/models/UserModel.php';
 require_once SITE_ROOT . '/app/models/ProfileModel.php';
+require_once SITE_ROOT . '/app/helpers/RateLimiter.php';
 
 class AuthController extends BaseController {
     private $userModel;
+    private $rateLimiter;
     
     public function __construct() {
         $this->userModel = new UserModel();
+        $this->rateLimiter = new \App\Helpers\RateLimiter(5, 1); // 5 attempts per minute
     }
     
     public function loginForm() {
@@ -28,31 +31,47 @@ class AuthController extends BaseController {
             $this->redirectWithMessage('/login', 'Invalid security token.', 'error');
         }
         
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $key = 'login_attempts_' . $ip;
+        
+        if ($this->rateLimiter->tooManyAttempts($key)) {
+            $waitTime = $this->rateLimiter->availableIn($key);
+            $this->redirectWithMessage('/login', "Too many login attempts. Please try again in {$waitTime} seconds.", 'error');
+        }
+        
         $email = $this->sanitizeInput($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
         $remember = isset($_POST['remember']);
         
         if (empty($email) || empty($password)) {
+            $this->rateLimiter->hit($key);
             $this->redirectWithMessage('/login', 'Please fill in all fields.', 'error');
         }
         
         if (!$this->validateEmail($email)) {
+            $this->rateLimiter->hit($key);
             $this->redirectWithMessage('/login', 'Invalid email format.', 'error');
         }
         
         $user = $this->userModel->findByEmail($email);
         
         if (!$user || !$this->verifyPassword($password, $user['password'])) {
+            $this->rateLimiter->hit($key);
             $this->redirectWithMessage('/login', 'Invalid email or password.', 'error');
         }
         
         if ($user['status'] === 'blocked') {
+            $this->rateLimiter->hit($key);
             $this->redirectWithMessage('/login', 'Your account has been blocked. Please contact support.', 'error');
         }
         
         if (!$user['email_verified']) {
+            $this->rateLimiter->hit($key);
             $this->redirectWithMessage('/verify-email', 'Please verify your email address first.', 'warning');
         }
+        
+        // Reset rate limiter on successful login
+        $this->rateLimiter->resetAttempts($key);
         
         // Get user profile information
         $profileModel = new ProfileModel();
@@ -67,6 +86,9 @@ class AuthController extends BaseController {
         $_SESSION['first_name'] = $profile ? $profile['first_name'] : '';
         $_SESSION['last_name'] = $profile ? $profile['last_name'] : '';
         
+        // Regenerate session ID for security
+        session_regenerate_id(true);
+        
         // Log the login
         $this->userModel->logLogin(
             $user['id'],
@@ -77,7 +99,9 @@ class AuthController extends BaseController {
         // Set remember me cookie if requested
         if ($remember) {
             $token = bin2hex(random_bytes(32));
-            setcookie('remember_token', $token, time() + (86400 * 30), '/'); // 30 days
+            $expires = time() + (86400 * 30); // 30 days
+            setcookie('remember_token', $token, $expires, '/', '', true, true); // Secure and HttpOnly
+            $this->userModel->storeRememberToken($user['id'], $token, $expires);
         }
         
         // Update user status to active if pending
