@@ -10,7 +10,7 @@ class AuthController extends BaseController {
     
     public function __construct() {
         parent::__construct();
-        $this->userService = Container::make(UserService::class);
+        $this->userService = $this->container->make(UserService::class);
     }
     
     public function loginForm() {

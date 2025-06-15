@@ -3,8 +3,20 @@
 namespace App\Core;
 
 class Container {
+    private static $instance = null;
     private static $instances = [];
     private static $bindings = [];
+    
+    private function __construct() {
+        // Private constructor to prevent direct instantiation
+    }
+    
+    public static function getInstance() {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
     
     public static function bind($abstract, $concrete = null) {
         if (is_null($concrete)) {
@@ -103,4 +115,10 @@ class Container {
         self::singleton('App\Helpers\CsrfProtection');
         self::singleton('App\Helpers\FileUploadValidator');
     }
+    
+    // Prevent cloning of the instance
+    private function __clone() {}
+    
+    // Prevent unserializing of the instance
+    private function __wakeup() {}
 } 

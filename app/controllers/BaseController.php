@@ -2,8 +2,30 @@
 require_once SITE_ROOT . '/app/helpers/functions.php';
 require_once SITE_ROOT . '/app/helpers/CsrfProtection.php';
 require_once SITE_ROOT . '/app/helpers/FileUploadValidator.php';
+require_once SITE_ROOT . '/app/core/Container.php';
+
+use App\Core\Container;
 
 abstract class BaseController {
+    protected $container;
+    
+    public function __construct() {
+        // Initialize container and register default bindings
+        Container::registerDefaultBindings();
+        $this->container = Container::getInstance();
+        
+        // Start session if not already started
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // Regenerate session ID periodically to prevent session fixation
+        if (!isset($_SESSION['last_regeneration']) || 
+            (time() - $_SESSION['last_regeneration']) > 300) { // 5 minutes
+            session_regenerate_id(true);
+            $_SESSION['last_regeneration'] = time();
+        }
+    }
     
     protected function view($view, $data = []) {
         extract($data);
@@ -51,19 +73,6 @@ abstract class BaseController {
         $_SESSION['flash_message'] = $message;
         $_SESSION['flash_type'] = $type;
         $this->redirect($url);
-    }
-    
-    protected function startSession() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        
-        // Regenerate session ID periodically to prevent session fixation
-        if (!isset($_SESSION['last_regeneration']) || 
-            (time() - $_SESSION['last_regeneration']) > 300) { // 5 minutes
-            session_regenerate_id(true);
-            $_SESSION['last_regeneration'] = time();
-        }
     }
     
     protected function validateCsrf() {
