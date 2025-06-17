@@ -1,15 +1,20 @@
 <?php
 require_once 'BaseController.php';
+require_once SITE_ROOT . '/app/core/Container.php';
 require_once SITE_ROOT . '/app/models/UserModel.php';
 require_once SITE_ROOT . '/app/models/ProfileModel.php';
 require_once SITE_ROOT . '/app/helpers/PermissionMiddleware.php';
 require_once SITE_ROOT . '/app/helpers/SocialAuth.php';
 
+use App\Core\Container;
+use App\Services\UserService;
+
 class AuthController extends BaseController {
-    private $userModel;
+    private $userService;
     
     public function __construct() {
-        $this->userModel = new UserModel();
+        parent::__construct();
+        $this->userService = $this->container->make(UserService::class);
     }
     
     public function loginForm() {
@@ -69,6 +74,9 @@ class AuthController extends BaseController {
         $_SESSION['first_name'] = $profile ? $profile['first_name'] : '';
         $_SESSION['last_name'] = $profile ? $profile['last_name'] : '';
         
+        // Regenerate session ID for security
+        session_regenerate_id(true);
+        
         // Log the login
         $this->userModel->logLogin(
             $user['id'],
@@ -79,7 +87,8 @@ class AuthController extends BaseController {
         // Set remember me cookie if requested
         if ($remember) {
             $token = bin2hex(random_bytes(32));
-            setcookie('remember_token', $token, time() + (86400 * 30), '/'); // 30 days
+            $expires = time() + (86400 * 30); // 30 days
+            setcookie('remember_token', $token, $expires, '/', '', true, true); // Secure and HttpOnly
         }
         
         // Update user status to active if pending
@@ -115,61 +124,48 @@ class AuthController extends BaseController {
             $this->redirectWithMessage('/register', 'Invalid security token.', 'error');
         }
         
-        $email = $this->sanitizeInput($_POST['email'] ?? '');
-        $phone = $this->sanitizeInput($_POST['phone'] ?? '');
-        $password = $_POST['password'] ?? '';
-        $confirmPassword = $_POST['confirm_password'] ?? '';
-        $terms = isset($_POST['terms']);
-        
-        // Validation
-        if (empty($email) || empty($phone) || empty($password) || empty($confirmPassword)) {
-            $this->redirectWithMessage('/register', 'Please fill in all fields.', 'error');
-        }
-        
-        if (!$this->validateEmail($email)) {
-            $this->redirectWithMessage('/register', 'Invalid email format.', 'error');
-        }
-        
-        if (!$this->validatePhone($phone)) {
-            $this->redirectWithMessage('/register', 'Invalid phone number format. Use +94XXXXXXXXX or 0XXXXXXXXX', 'error');
-        }
-        
-        if (strlen($password) < 8) {
-            $this->redirectWithMessage('/register', 'Password must be at least 8 characters long.', 'error');
-        }
-        
-        if ($password !== $confirmPassword) {
-            $this->redirectWithMessage('/register', 'Passwords do not match.', 'error');
-        }
-        
-        if (!$terms) {
-            $this->redirectWithMessage('/register', 'You must accept the terms and conditions.', 'error');
-        }
-        
-        // Check if user already exists
-        if ($this->userModel->findByEmail($email)) {
-            $this->redirectWithMessage('/register', 'An account with this email already exists.', 'error');
-        }
-        
-        if ($this->userModel->findByPhone($phone)) {
-            $this->redirectWithMessage('/register', 'An account with this phone number already exists.', 'error');
-        }
-        
         try {
-            $userId = $this->userModel->createUser($email, $phone, $password);
+            $email = $this->sanitizeInput($_POST['email'] ?? '');
+            $phone = $this->sanitizeInput($_POST['phone'] ?? '');
+            $password = $_POST['password'] ?? '';
+            $confirmPassword = $_POST['confirm_password'] ?? '';
+            $terms = isset($_POST['terms']);
             
-            if ($userId) {
-                // Send verification email
-                $user = $this->userModel->find($userId);
-                $this->sendVerificationEmail($user);
-                
-                $_SESSION['temp_user_id'] = $userId;
-                $this->redirectWithMessage('/verify-email', 'Account created successfully! Please check your email to verify your account.', 'success');
-            } else {
-                $this->redirectWithMessage('/register', 'Registration failed. Please try again.', 'error');
+            // Validation
+            if (empty($email) || empty($phone) || empty($password) || empty($confirmPassword)) {
+                throw new \Exception('Please fill in all fields.');
             }
-        } catch (Exception $e) {
-            $this->redirectWithMessage('/register', 'Registration failed: ' . $e->getMessage(), 'error');
+            
+            if (!$this->validateEmail($email)) {
+                throw new \Exception('Invalid email format.');
+            }
+            
+            if (!$this->validatePhone($phone)) {
+                throw new \Exception('Invalid phone number format. Use +94XXXXXXXXX or 0XXXXXXXXX');
+            }
+            
+            if (strlen($password) < 8) {
+                throw new \Exception('Password must be at least 8 characters long.');
+            }
+            
+            if ($password !== $confirmPassword) {
+                throw new \Exception('Passwords do not match.');
+            }
+            
+            if (!$terms) {
+                throw new \Exception('You must accept the terms and conditions.');
+            }
+            
+            $userId = $this->userService->register($email, $phone, $password);
+            
+            // Send verification email
+            $user = $this->userService->find($userId);
+            $this->sendVerificationEmail($user);
+            
+            $_SESSION['temp_user_id'] = $userId;
+            $this->redirectWithMessage('/verify-email', 'Account created successfully! Please check your email to verify your account.', 'success');
+        } catch (\Exception $e) {
+            $this->redirectWithMessage('/register', $e->getMessage(), 'error');
         }
     }
     
@@ -185,7 +181,7 @@ class AuthController extends BaseController {
             return;
         }
         
-        if ($this->userModel->verifyEmail($token)) {
+        if ($this->userService->verifyEmail($token)) {
             $this->redirectWithMessage('/verify-phone', 'Email verified successfully! Now please verify your phone number.', 'success');
         } else {
             $this->redirectWithMessage('/register', 'Invalid or expired verification token.', 'error');
@@ -216,7 +212,7 @@ class AuthController extends BaseController {
             $this->redirectWithMessage('/verify-phone', 'Please enter the verification code.', 'error');
         }
         
-        if ($this->userModel->verifyPhone($_SESSION['temp_user_id'], $code)) {
+        if ($this->userService->verifyPhone($_SESSION['temp_user_id'], $code)) {
             unset($_SESSION['temp_user_id']);
             $this->redirectWithMessage('/login', 'Phone verified successfully! You can now login.', 'success');
         } else {
@@ -248,13 +244,13 @@ class AuthController extends BaseController {
             $this->redirectWithMessage('/forgot-password', 'Please enter a valid email address.', 'error');
         }
         
-        $user = $this->userModel->findByEmail($email);
+        $user = $this->userService->findByEmail($email);
         
         if ($user) {
             $token = bin2hex(random_bytes(32));
             $expires = date('Y-m-d H:i:s', strtotime('+1 hour'));
             
-            $this->userModel->setResetToken($email, $token, $expires);
+            $this->userService->setResetToken($email, $token, $expires);
             $this->sendPasswordResetEmail($user, $token);
         }
         
@@ -299,7 +295,7 @@ class AuthController extends BaseController {
             $this->redirectWithMessage("/reset-password?token={$token}", 'Passwords do not match.', 'error');
         }
         
-        if ($this->userModel->resetPassword($token, $password)) {
+        if ($this->userService->resetPassword($token, $password)) {
             $this->redirectWithMessage('/login', 'Password reset successfully! You can now login.', 'success');
         } else {
             $this->redirectWithMessage('/forgot-password', 'Invalid or expired reset token.', 'error');

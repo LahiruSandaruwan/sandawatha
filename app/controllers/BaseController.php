@@ -1,7 +1,31 @@
 <?php
 require_once SITE_ROOT . '/app/helpers/functions.php';
+require_once SITE_ROOT . '/app/helpers/CsrfProtection.php';
+require_once SITE_ROOT . '/app/helpers/FileUploadValidator.php';
+require_once SITE_ROOT . '/app/core/Container.php';
+
+use App\Core\Container;
 
 abstract class BaseController {
+    protected $container;
+    
+    public function __construct() {
+        // Initialize container and register default bindings
+        Container::registerDefaultBindings();
+        $this->container = Container::getInstance();
+        
+        // Start session if not already started
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // Regenerate session ID periodically to prevent session fixation
+        if (!isset($_SESSION['last_regeneration']) || 
+            (time() - $_SESSION['last_regeneration']) > 300) { // 5 minutes
+            session_regenerate_id(true);
+            $_SESSION['last_regeneration'] = time();
+        }
+    }
     
     protected function view($view, $data = []) {
         extract($data);
@@ -51,39 +75,10 @@ abstract class BaseController {
         $this->redirect($url);
     }
     
-    protected function startSession() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        
-        // Regenerate session ID periodically to prevent session fixation
-        if (!isset($_SESSION['last_regeneration']) || 
-            (time() - $_SESSION['last_regeneration']) > 300) { // 5 minutes
-            session_regenerate_id(true);
-            $_SESSION['last_regeneration'] = time();
-        }
-    }
-    
     protected function validateCsrf() {
         try {
-            $token = $_POST['csrf_token'] ?? null;
-            $sessionToken = $_SESSION['csrf_token'] ?? null;
-            
-            if (!$token || !$sessionToken) {
-                error_log("CSRF validation failed: Token missing");
-                error_log("POST token: " . ($token ? $token : 'null'));
-                error_log("Session token: " . ($sessionToken ? $sessionToken : 'null'));
-                return false;
-            }
-            
-            if (!hash_equals($sessionToken, $token)) {
-                error_log("CSRF validation failed: Token mismatch");
-                error_log("POST token: " . $token);
-                error_log("Session token: " . $sessionToken);
-                return false;
-            }
-            
-            return true;
+            $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
+            return \App\Helpers\CsrfProtection::validateToken($token);
         } catch (Exception $e) {
             error_log("Error in validateCsrf: " . $e->getMessage());
             error_log("Stack trace: " . $e->getTraceAsString());
@@ -93,21 +88,11 @@ abstract class BaseController {
     
     protected function generateCsrf() {
         try {
-            if (!isset($_SESSION['csrf_token'])) {
-                $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-            }
-            
-            return $_SESSION['csrf_token'];
+            return \App\Helpers\CsrfProtection::generateToken();
         } catch (Exception $e) {
             error_log("Error in generateCsrf: " . $e->getMessage());
             error_log("Stack trace: " . $e->getTraceAsString());
-            
-            // Fallback to a less secure but still usable token
-            if (!isset($_SESSION['csrf_token'])) {
-                $_SESSION['csrf_token'] = md5(uniqid(mt_rand(), true));
-            }
-            
-            return $_SESSION['csrf_token'];
+            return null;
         }
     }
     
@@ -183,16 +168,10 @@ abstract class BaseController {
     }
     
     protected function uploadFile($file, $directory, $allowedTypes, $maxSize) {
-        if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
-            throw new Exception('File upload error');
-        }
+        $validator = new \App\Helpers\FileUploadValidator($allowedTypes, $maxSize);
         
-        if (!in_array($file['type'], $allowedTypes)) {
-            throw new Exception('Invalid file type');
-        }
-        
-        if ($file['size'] > $maxSize) {
-            throw new Exception('File size too large');
+        if (!$validator->validate($file)) {
+            throw new Exception(implode(', ', $validator->getErrors()));
         }
         
         $uploadDir = UPLOAD_PATH . $directory . '/';

@@ -2,6 +2,16 @@
 // Define the site root path
 define('SITE_ROOT', dirname(__DIR__));
 
+// Load configuration
+require_once SITE_ROOT . '/config/config.php';
+
+// Register autoloader
+require_once SITE_ROOT . '/app/core/Autoloader.php';
+\App\Core\Autoloader::register();
+
+// Initialize container
+\App\Core\Container::registerDefaultBindings();
+
 // Configure session first, before starting it
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
@@ -9,7 +19,6 @@ ini_set('session.cookie_secure', isset($_SERVER['HTTPS']));
 ini_set('session.cookie_samesite', 'Lax');
 
 // Load configuration and required files
-require_once SITE_ROOT . '/config/config.php';
 require_once SITE_ROOT . '/config/database.php';
 require_once SITE_ROOT . '/app/helpers/functions.php';
 
@@ -55,9 +64,11 @@ header('X-XSS-Protection: 1; mode=block');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
 
-// Initialize router
-require_once SITE_ROOT . '/routes/router.php';
+// Parse URL
+$url = $_SERVER['REQUEST_URI'];
+$url = rtrim($url, '/');
+$url = filter_var($url, FILTER_SANITIZE_URL);
+$url = substr($url, strlen(BASE_URL));
 
-// Create router instance and dispatch
-$router = new Router();
-$router->dispatch();
+// Route the request
+require_once SITE_ROOT . '/routes/web.php';
