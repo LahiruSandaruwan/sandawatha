@@ -1,0 +1,410 @@
+/**
+ * WebRTC Calling Interface Styles
+ * Modern glassmorphism design for audio/video calling
+ */
+
+/* Call Interface Modal */
+#callModal .modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+#callModal .modal-header {
+    background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(80, 200, 120, 0.1));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1.5rem;
+}
+
+#callModal .modal-title {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+#callModal .call-timer {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* Video Interface */
+.call-interface {
+    background: #000;
+    height: 400px;
+    overflow: hidden;
+}
+
+#remoteVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: linear-gradient(45deg, #1a1a1a, #2d2d2d);
+}
+
+#localVideo {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 150px;
+    height: 100px;
+    border-radius: 15px;
+    border: 3px solid rgba(255, 255, 255, 0.8);
+    object-fit: cover;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+#localVideo:hover {
+    transform: scale(1.1);
+    border-color: var(--primary-color);
+}
+
+/* Call Status Overlay */
+.call-status {
+    z-index: 10;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.call-status h4 {
+    font-size: 1.8rem;
+    font-weight: 300;
+    margin: 0;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Call Controls */
+.call-controls {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.call-controls .btn {
+    width: 60px;
+    height: 60px;
+    border: none;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.call-controls .btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+}
+
+.call-controls .btn:hover::before {
+    width: 100%;
+    height: 100%;
+}
+
+.call-controls .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.call-controls .btn i {
+    font-size: 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* Button Variants */
+.call-controls .btn-secondary {
+    background: linear-gradient(135deg, #6c757d, #5a6268);
+    color: white;
+}
+
+.call-controls .btn-warning {
+    background: linear-gradient(135deg, #ffc107, #e0a800);
+    color: #212529;
+}
+
+.call-controls .btn-danger {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+}
+
+.call-controls .btn-success {
+    background: linear-gradient(135deg, #28a745, #218838);
+    color: white;
+}
+
+/* Incoming Call Modal */
+#incomingCallModal .modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 25px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+#incomingCallModal .modal-body {
+    padding: 3rem 2rem;
+}
+
+.incoming-call-avatar {
+    animation: ring 2s infinite;
+}
+
+@keyframes ring {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.incoming-call-avatar i {
+    font-size: 5rem;
+    color: var(--primary-color);
+    text-shadow: 0 4px 20px rgba(74, 144, 226, 0.3);
+}
+
+/* Call Action Buttons */
+.call-actions .btn {
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.call-actions .btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease;
+}
+
+.call-actions .btn:hover::before {
+    width: 150%;
+    height: 150%;
+}
+
+.call-actions .btn:hover {
+    transform: translateY(-5px) scale(1.1);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+}
+
+.call-actions .btn i {
+    font-size: 1.8rem;
+    position: relative;
+    z-index: 1;
+}
+
+.call-actions .btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    animation: pulse-green 2s infinite;
+}
+
+.call-actions .btn-danger {
+    background: linear-gradient(135deg, #dc3545, #fd7e14);
+    animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-green {
+    0%, 100% { box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3); }
+    50% { box-shadow: 0 10px 30px rgba(40, 167, 69, 0.6); }
+}
+
+@keyframes pulse-red {
+    0%, 100% { box-shadow: 0 10px 30px rgba(220, 53, 69, 0.3); }
+    50% { box-shadow: 0 10px 30px rgba(220, 53, 69, 0.6); }
+}
+
+/* Audio-only Call Interface */
+.audio-call-interface {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+}
+
+.audio-call-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2rem;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    animation: pulse-avatar 3s infinite;
+}
+
+@keyframes pulse-avatar {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+    50% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(255, 255, 255, 0); }
+}
+
+.audio-call-avatar i {
+    font-size: 3rem;
+    color: white;
+}
+
+/* Call Notifications */
+.call-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 1.5rem;
+    min-width: 300px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    #callModal .modal-lg {
+        max-width: 95%;
+        margin: 0.5rem auto;
+    }
+
+    .call-interface {
+        height: 300px;
+    }
+
+    #localVideo {
+        width: 100px;
+        height: 75px;
+        top: 15px;
+        right: 15px;
+    }
+
+    .call-controls {
+        padding: 1.5rem 1rem;
+    }
+
+    .call-controls .btn {
+        width: 50px;
+        height: 50px;
+        margin: 0 0.5rem;
+    }
+
+    .call-controls .btn i {
+        font-size: 1.2rem;
+    }
+
+    .call-actions .btn {
+        width: 70px;
+        height: 70px;
+    }
+
+    .call-actions .btn i {
+        font-size: 1.5rem;
+    }
+
+    #incomingCallModal .modal-body {
+        padding: 2rem 1rem;
+    }
+
+    .incoming-call-avatar i {
+        font-size: 4rem;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    #callModal .modal-content,
+    #incomingCallModal .modal-content {
+        background: rgba(33, 37, 41, 0.95);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    #callModal .modal-header {
+        background: linear-gradient(135deg, rgba(74, 144, 226, 0.2), rgba(80, 200, 120, 0.2));
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .call-controls {
+        background: rgba(33, 37, 41, 0.95);
+        border-top-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .call-notification {
+        background: rgba(33, 37, 41, 0.95);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+}
+
+/* Connection Quality Indicator */
+.connection-quality {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.connection-quality.excellent { border-left: 4px solid #28a745; }
+.connection-quality.good { border-left: 4px solid #ffc107; }
+.connection-quality.poor { border-left: 4px solid #dc3545; }
+
+.connection-quality i {
+    font-size: 1rem;
+}
+
+/* Screen Sharing Support */
+.screen-share-btn {
+    background: linear-gradient(135deg, #6f42c1, #e83e8c);
+}
+
+.screen-sharing-indicator {
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    background: rgba(111, 66, 193, 0.9);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+} 

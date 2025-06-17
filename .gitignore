@@ -64,3 +64,34 @@ build/
 # Test and development files
 test_data.php
 migrate.php 
+# Cleanup and temporary files
+*.tmp
+*.temp
+*~
+*.bak
+*.orig
+.cleanup-backup/
+
+# Optimization files
+public/assets/optimized/
+
+# Development files
+*.sql
+run-migrations-xampp.php
+optimize-assets.sh
+cleanup-unwanted-files.sh
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+logs/*.log
+*.log
+

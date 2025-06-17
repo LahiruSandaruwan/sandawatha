@@ -5,6 +5,12 @@ $messages = $messages ?? [];
 $current_user_id = $current_user_id ?? 0;
 ?>
 
+<!-- Include Modern Chat Styles -->
+<link rel="stylesheet" href="<?= BASE_URL ?>/public/assets/css/chat/modern-chat.css">
+
+<!-- Include Modern Chat Enhancements -->
+<script src="<?= BASE_URL ?>/public/assets/js/chat/modern-chat-enhancements.js"></script>
+
 <!-- Set data attributes for JavaScript -->
 <script>
 document.body.dataset.currentUserId = '<?= $current_user_id ?>';
@@ -17,17 +23,23 @@ document.body.dataset.profilePhoto = '<?= htmlspecialchars($_SESSION['profile_ph
 <!-- Connected User Template -->
 <template id="connected-user-template">
     <div class="list-group-item list-group-item-action d-flex align-items-center">
-        <div class="online-indicator me-2" style="width: 8px; height: 8px; border-radius: 50%;"></div>
-        <img class="user-avatar rounded-circle me-2" width="32" height="32" alt="User Avatar">
-        <div class="flex-grow-1">
-            <div class="user-name fw-bold"></div>
-            <small class="last-active text-muted"></small>
+        <div class="position-relative me-3">
+            <img class="user-avatar rounded-circle" width="40" height="40" alt="User Avatar">
+            <div class="online-indicator"></div>
         </div>
-                    </div>
+        <div class="flex-grow-1">
+            <div class="user-name"></div>
+            <small class="last-active"></small>
+        </div>
+    </div>
 </template>
 
-<div class="container-fluid py-4">
-    <div class="row">
+<div class="modern-chat-wrapper" style="height: 700px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); position: relative; overflow: hidden; margin: 2rem 0;">
+    <!-- Background Pattern -->
+    <div class="background-pattern" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.05; background-image: radial-gradient(circle at 20% 20%, #667eea 0%, transparent 40%), radial-gradient(circle at 80% 80%, #764ba2 0%, transparent 40%); pointer-events: none;"></div>
+    
+    <div class="container-fluid py-4" style="position: relative; z-index: 1;">
+        <div class="row">
         <!-- Online Users Sidebar -->
         <div class="col-lg-3 col-md-4">
             <div class="online-users-sidebar">
@@ -84,29 +96,47 @@ document.body.dataset.profilePhoto = '<?= htmlspecialchars($_SESSION['profile_ph
                 <!-- Chat Header -->
                 <div class="card-header chat-header d-flex align-items-center">
                     <div class="d-flex align-items-center">
-                        <?php if (!empty($other_user['profile_photo'])): ?>
-                            <img src="<?= UPLOAD_URL . htmlspecialchars($other_user['profile_photo']) ?>" 
-                                 alt="Profile" class="rounded-circle me-3" width="40" height="40">
-                                        <?php else: ?>
-                            <div class="bg-secondary rounded-circle me-3 d-flex align-items-center justify-content-center" 
-                                 style="width: 40px; height: 40px;">
-                                <i class="bi bi-person text-white"></i>
+                        <div class="position-relative me-3">
+                            <?php if (!empty($other_user['profile_photo'])): ?>
+                                <img src="<?= UPLOAD_URL . htmlspecialchars($other_user['profile_photo']) ?>" 
+                                     alt="Profile" class="rounded-circle" width="50" height="50" style="object-fit: cover; border: 3px solid rgba(255,255,255,0.3);">
+                            <?php else: ?>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 50px; height: 50px; background: rgba(255,255,255,0.2); border: 3px solid rgba(255,255,255,0.3);">
+                                    <i class="bi bi-person text-white fs-4"></i>
+                                </div>
+                            <?php endif; ?>
+                            <div class="position-absolute bottom-0 end-0">
+                                <div class="online-status-indicator bg-success rounded-circle" style="width: 16px; height: 16px; border: 3px solid white;"></div>
                             </div>
-                                        <?php endif; ?>
+                        </div>
                         <div>
-                            <h5 class="mb-0"><?= htmlspecialchars($other_user['first_name'] . ' ' . ($other_user['last_name'] ?? '')) ?></h5>
-                            <small class="text-muted">
-                                <?= $other_user['age'] ?? '' ?> years old
-                                <?php if (!empty($other_user['district'])): ?>
-                                    • <?= htmlspecialchars($other_user['district']) ?>
-                                <?php endif; ?>
-                            </small>
+                            <h5 class="mb-1"><?= htmlspecialchars($other_user['first_name'] . ' ' . ($other_user['last_name'] ?? '')) ?></h5>
+                            <div class="d-flex align-items-center">
+                                <small class="me-2">
+                                    <?= $other_user['age'] ?? '' ?> years old
+                                    <?php if (!empty($other_user['district'])): ?>
+                                        • <?= htmlspecialchars($other_user['district']) ?>
+                                    <?php endif; ?>
+                                </small>
+                            </div>
+                            <div id="typing-indicator" class="typing-indicator" style="display: none;">
+                                <small class="text-white-50">
+                                    <i class="bi bi-three-dots"></i> Typing...
+                                </small>
+                            </div>
                         </div>
                     </div>
-                    <div class="ms-auto">
+                    <div class="ms-auto d-flex gap-2">
+                        <button class="btn btn-outline-light btn-sm rounded-circle" style="width: 40px; height: 40px;" title="Video Call">
+                            <i class="bi bi-camera-video"></i>
+                        </button>
+                        <button class="btn btn-outline-light btn-sm rounded-circle" style="width: 40px; height: 40px;" title="Voice Call">
+                            <i class="bi bi-telephone"></i>
+                        </button>
                         <a href="<?= BASE_URL ?>/profile/<?= $other_user['user_id'] ?>" 
                            class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-person"></i> View Profile
+                            <i class="bi bi-person"></i> Profile
                         </a>
                     </div>
                 </div>
@@ -141,24 +171,58 @@ document.body.dataset.profilePhoto = '<?= htmlspecialchars($_SESSION['profile_ph
                 
                 <!-- Message Input -->
                 <div class="card-footer">
-                    <form id="messageForm" class="d-flex">
+                    <form id="messageForm">
                         <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
                         <input type="hidden" name="receiver_id" value="<?= $other_user['user_id'] ?>">
                         <input type="hidden" name="subject" value="Chat Message">
-                        <div class="flex-grow-1 me-2">
-                            <textarea id="messageInput" name="message" class="form-control" rows="2" 
-                                      placeholder="Type your message..." required></textarea>
+                        
+                        <!-- Message Composition Area -->
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <div class="flex-grow-1 position-relative">
+                                <textarea id="messageInput" name="message" 
+                                         class="form-control" 
+                                         rows="1" 
+                                         placeholder="Type your message..." 
+                                         required 
+                                         style="resize: none; padding-right: 60px;"></textarea>
+                                
+                                <!-- Emoji/Attach Button inside textarea -->
+                                <div class="position-absolute top-50 end-0 translate-middle-y pe-3">
+                                    <button type="button" class="btn btn-sm btn-link p-0" title="Add Emoji">
+                                        <i class="bi bi-emoji-smile text-muted"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Quick Actions -->
+                            <div class="d-flex gap-1">
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-circle p-2" style="width: 40px; height: 40px;" title="Attach File">
+                                    <i class="bi bi-paperclip"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-circle p-2" style="width: 40px; height: 40px;" title="Send Image">
+                                    <i class="bi bi-image"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Send Button -->
+                            <button id="sendButton" type="submit" class="btn btn-primary rounded-circle p-0" style="width: 50px; height: 50px;">
+                                <i class="bi bi-send"></i>
+                            </button>
                         </div>
-                        <div class="align-self-end">
-                            <button id="sendButton" type="submit" class="btn btn-primary">
-                                <i class="bi bi-send"></i> Send
-                        </button>
-                    </div>
+                        
+                        <!-- Quick Replies (Optional) -->
+                        <div id="quick-replies" class="d-flex gap-2 flex-wrap" style="display: none !important;">
+                            <button type="button" class="btn btn-outline-primary btn-sm quick-reply-btn">👋 Hello</button>
+                            <button type="button" class="btn btn-outline-primary btn-sm quick-reply-btn">😊 How are you?</button>
+                            <button type="button" class="btn btn-outline-primary btn-sm quick-reply-btn">👍 Sounds good</button>
+                            <button type="button" class="btn btn-outline-primary btn-sm quick-reply-btn">❤️ Love it</button>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <!-- Inline ChatManager Class -->

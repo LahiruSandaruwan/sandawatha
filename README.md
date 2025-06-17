@@ -108,10 +108,10 @@ git clone https://github.com/LahiruSandaruwan/sandawatha.git
 cd sandawatha
 ```
 
-2. Configure your web server:
-   - Point your web server's document root to the project's `public` directory
-   - Ensure mod_rewrite is enabled for Apache
-   - Make sure .htaccess files are allowed
+2. Install dependencies:
+```bash
+composer install
+```
 
 3. Set up the database:
    - Create a new MySQL database
@@ -131,6 +131,58 @@ cd sandawatha
 chmod -R 755 .
 chmod -R 777 public/uploads
 ```
+
+## Quick Start (Development)
+
+### Recommended: Using Composer Scripts (Cross-platform)
+
+```bash
+# Start both web server and WebSocket server
+composer run dev
+# or
+composer run start
+
+# Or start services separately:
+composer run serve      # Web application only (http://localhost:8000)
+composer run websocket  # WebSocket server only (ws://localhost:8080)
+```
+
+### Alternative: Direct PHP Commands
+
+```bash
+# Start complete development environment
+php bin/dev-server.php
+
+# Or start services separately:
+php -S localhost:8000 -t public        # Web server only
+php bin/websocket_server.php           # WebSocket server only
+```
+
+### Legacy: Shell Scripts (Linux/Mac/Windows)
+Shell scripts are still available for compatibility:
+```bash
+./start-dev.sh      # Linux/Mac
+start-dev.bat       # Windows
+```
+
+### Available Composer Commands:
+- `composer run dev` - Start both servers (recommended)
+- `composer run start` - Alias for dev command
+- `composer run serve` - Web application only
+- `composer run websocket` - WebSocket server only
+
+### Important Notes:
+- 💬 **Real-time messaging requires both servers** to be running
+- 🌐 Web app will be available at: `http://localhost:8000`
+- 💬 WebSocket server runs on: `ws://localhost:8080`
+- 📋 See `DEV-SETUP.md` for detailed development instructions
+
+### Features Requiring WebSocket Server:
+- Real-time messaging
+- Online user status
+- Live chat notifications
+- Message status updates
+- Typing indicators
 
 ## Project Structure
 

@@ -96,6 +96,48 @@
                             </button>
                         </form>
 
+                        <!-- Social Login Buttons -->
+                        <?php 
+                        try {
+                            require_once SITE_ROOT . '/app/helpers/SocialAuth.php';
+                            $availableProviders = SocialAuth::getAvailableProviders();
+                        } catch (Exception $e) {
+                            $availableProviders = []; // Fallback if there's an error
+                        }
+                        
+                        // Show demo buttons even without configuration for testing
+                        $showDemoButtons = true; // Set to false once OAuth is configured
+                        
+                        if (!empty($availableProviders) || $showDemoButtons): ?>
+                        <div class="text-center mb-3">
+                            <div class="d-flex align-items-center my-3">
+                                <hr class="flex-grow-1">
+                                <span class="px-3 text-muted small">OR</span>
+                                <hr class="flex-grow-1">
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <?php if (in_array('google', $availableProviders) || $showDemoButtons): ?>
+                                <a href="<?= BASE_URL ?>/auth/google" class="btn btn-outline-danger">
+                                    <i class="bi bi-google"></i> Sign up with Google
+                                    <?php if ($showDemoButtons && !in_array('google', $availableProviders)): ?>
+                                    <small class="d-block text-muted">(Demo - requires configuration)</small>
+                                    <?php endif; ?>
+                                </a>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <?php if ($showDemoButtons && empty($availableProviders)): ?>
+                            <div class="mt-2">
+                                <small class="text-info">
+                                    <i class="bi bi-info-circle"></i> 
+                                    Social login buttons are visible for demo. Configure OAuth credentials to make them functional.
+                                </small>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        <?php endif; ?>
+
                         <div class="text-center">
                             <p class="text-muted mb-0">
                                 Already have an account? 

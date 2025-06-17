@@ -571,5 +571,65 @@ class ProfileModel extends BaseModel {
         
         return $this->fetchAll($sql);
     }
+    
+    /**
+     * Create profile from social login data
+     */
+    public function createFromSocialData($userId, $socialData) {
+        $profileData = [
+            'user_id' => $userId,
+            'first_name' => $socialData['first_name'] ?? '',
+            'last_name' => $socialData['last_name'] ?? '',
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+        
+        // Download and save profile picture if provided
+        if (!empty($socialData['profile_picture_url'])) {
+            $this->downloadSocialProfilePicture($userId, $socialData['profile_picture_url']);
+        }
+        
+        return $this->create($profileData);
+    }
+    
+    /**
+     * Update profile picture from URL
+     */
+    public function updateProfilePicture($userId, $pictureUrl) {
+        return $this->downloadSocialProfilePicture($userId, $pictureUrl);
+    }
+    
+    /**
+     * Download and save social media profile picture
+     */
+    private function downloadSocialProfilePicture($userId, $pictureUrl) {
+        try {
+            // Create uploads directory if it doesn't exist
+            $uploadDir = SITE_ROOT . '/public/uploads/profiles/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            
+            // Generate unique filename
+            $filename = $userId . '_' . time() . '.png';
+            $filepath = $uploadDir . $filename;
+            
+            // Download the image
+            $imageData = file_get_contents($pictureUrl);
+            if ($imageData !== false) {
+                file_put_contents($filepath, $imageData);
+                
+                // Update profile with new picture
+                return $this->updateProfile($userId, [
+                    'profile_photo' => $filename
+                ]);
+            }
+            
+            return false;
+            
+        } catch (Exception $e) {
+            error_log("Error downloading social profile picture: " . $e->getMessage());
+            return false;
+        }
+    }
 }
 ?>

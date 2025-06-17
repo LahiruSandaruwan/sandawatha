@@ -1,7 +1,9 @@
 <?php
 require_once 'BaseModel.php';
+require_once __DIR__ . '/../helpers/UuidTrait.php';
 
 class UserModel extends BaseModel {
+    use UuidTrait;
     protected $table = 'users';
     
     protected function getAllowedColumns() {
@@ -219,6 +221,51 @@ class UserModel extends BaseModel {
         if (strpos($userAgent, 'Mobile') !== false) return 'Mobile';
         if (strpos($userAgent, 'Tablet') !== false) return 'Tablet';
         return 'Desktop';
+    }
+    
+    /**
+     * Create user from social login
+     */
+    public function createSocialUser($email, $password, $provider, $providerId = null) {
+        $data = [
+            'email' => $email,
+            'password' => password_hash($password, PASSWORD_DEFAULT),
+            'email_verified' => 1, // Social logins are pre-verified
+            'phone_verified' => 0,
+            'status' => 'active',
+            'social_provider' => $provider,
+            'social_provider_id' => $providerId,
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+        
+        return $this->create($data);
+    }
+    
+    /**
+     * Update social provider information
+     */
+    public function updateSocialProvider($userId, $provider, $providerId = null) {
+        $data = [
+            'social_provider' => $provider,
+            'social_provider_id' => $providerId,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        
+        return $this->update($userId, $data);
+    }
+    
+    /**
+     * Find user by social provider ID
+     */
+    public function findBySocialProvider($provider, $providerId) {
+        $sql = "SELECT * FROM {$this->table} 
+                WHERE social_provider = :provider 
+                AND social_provider_id = :provider_id";
+        
+        return $this->fetchOne($sql, [
+            ':provider' => $provider,
+            ':provider_id' => $providerId
+        ]);
     }
 }
 ?>

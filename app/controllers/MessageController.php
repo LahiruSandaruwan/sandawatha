@@ -128,14 +128,19 @@ class MessageController extends BaseController {
             $this->json(['success' => false, 'message' => 'Cannot send message to yourself'], 400);
         }
         
-        // Check daily limit based on premium status
-        $features = $this->premiumModel->getUserFeatures($currentUser['id']);
-        $dailyLimit = $features['message_limit_per_day'];
+        // Check daily limit using new permission system
+        require_once SITE_ROOT . '/app/helpers/PermissionMiddleware.php';
         
-        if ($dailyLimit !== 'unlimited') {
-            if (!$this->messageModel->checkDailyLimit($currentUser['id'], $dailyLimit)) {
-                $this->json(['success' => false, 'message' => 'Daily message limit reached. Upgrade to premium for unlimited messaging.'], 429);
-            }
+        if (PermissionMiddleware::hasReachedLimit('daily_messages', $currentUser['id'])) {
+            $packageInfo = PermissionMiddleware::getUserPackageInfo($currentUser['id']);
+            $packageName = $packageInfo ? $packageInfo['name'] : 'Basic';
+            
+            $this->json([
+                'success' => false, 
+                'message' => "Daily message limit reached. Upgrade from {$packageName} for more messages.",
+                'action' => 'upgrade_required',
+                'upgrade_url' => BASE_URL . '/premium'
+            ], 429);
         }
         
         try {
@@ -186,14 +191,19 @@ class MessageController extends BaseController {
         $receiverId = ($parentMessage['sender_id'] == $currentUser['id']) ? 
                      $parentMessage['receiver_id'] : $parentMessage['sender_id'];
         
-        // Check daily limit
-        $features = $this->premiumModel->getUserFeatures($currentUser['id']);
-        $dailyLimit = $features['message_limit_per_day'];
+        // Check daily limit using new permission system
+        require_once SITE_ROOT . '/app/helpers/PermissionMiddleware.php';
         
-        if ($dailyLimit !== 'unlimited') {
-            if (!$this->messageModel->checkDailyLimit($currentUser['id'], $dailyLimit)) {
-                $this->json(['success' => false, 'message' => 'Daily message limit reached. Upgrade to premium for unlimited messaging.'], 429);
-            }
+        if (PermissionMiddleware::hasReachedLimit('daily_messages', $currentUser['id'])) {
+            $packageInfo = PermissionMiddleware::getUserPackageInfo($currentUser['id']);
+            $packageName = $packageInfo ? $packageInfo['name'] : 'Basic';
+            
+            $this->json([
+                'success' => false, 
+                'message' => "Daily message limit reached. Upgrade from {$packageName} for more messages.",
+                'action' => 'upgrade_required',
+                'upgrade_url' => BASE_URL . '/premium'
+            ], 429);
         }
         
         try {
@@ -288,8 +298,15 @@ class MessageController extends BaseController {
             $this->redirect('/login');
         }
         
-        // Load user profile information
+        // Load models
         $profileModel = new ProfileModel();
+        
+        // Check if user is trying to chat with themselves
+        if ($currentUser['id'] == $userId) {
+            $this->redirectWithMessage('/messages', 'Cannot chat with yourself.', 'error');
+        }
+        
+        // Load user profile information
         $userProfile = $profileModel->findByUserId($currentUser['id']);
         $otherUserProfile = $profileModel->getProfileWithUser($userId, $currentUser['id']);
         
@@ -297,15 +314,19 @@ class MessageController extends BaseController {
             $this->redirectWithMessage('/messages', 'User not found.', 'error');
         }
         
-        // Set user profile information in session
+        // Set user profile information in session for enhanced chat
         $_SESSION['first_name'] = $userProfile['first_name'] ?? '';
         $_SESSION['last_name'] = $userProfile['last_name'] ?? '';
+        $_SESSION['profile_photo'] = $userProfile['profile_photo'] ?? '';
         
         // Get conversation history between these two users
         $messages = $this->messageModel->getConversationBetweenUsers($currentUser['id'], $userId);
         
+        // Mark messages as read
+        $this->messageModel->markConversationAsRead($currentUser['id'], $userId);
         
-        $this->layout('main', 'messages/chat', [
+        // Use enhanced chat view
+        $this->layout('main', 'messages/enhanced-chat', [
             'other_user' => $otherUserProfile,
             'messages' => $messages,
             'current_user_id' => $currentUser['id'],
@@ -313,8 +334,10 @@ class MessageController extends BaseController {
             'title' => 'Chat with ' . htmlspecialchars($otherUserProfile['first_name']) . ' - Sandawatha.lk',
             'description' => 'Chat with ' . htmlspecialchars($otherUserProfile['first_name']) . ' on Sandawatha.lk',
             'component_css' => [
-                'chat/chat',
-                'chat/connected-users'
+                'chat/enhanced-chat'
+            ],
+            'scripts' => [
+                'chat/enhanced-chat'
             ]
         ]);
     }

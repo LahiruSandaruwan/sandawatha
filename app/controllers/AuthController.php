@@ -2,6 +2,8 @@
 require_once 'BaseController.php';
 require_once SITE_ROOT . '/app/models/UserModel.php';
 require_once SITE_ROOT . '/app/models/ProfileModel.php';
+require_once SITE_ROOT . '/app/helpers/PermissionMiddleware.php';
+require_once SITE_ROOT . '/app/helpers/SocialAuth.php';
 
 class AuthController extends BaseController {
     private $userModel;
@@ -85,10 +87,12 @@ class AuthController extends BaseController {
             $this->userModel->updateStatus($user['id'], 'active');
         }
         
-        // Redirect based on role
-        if ($user['role'] === 'admin') {
+        // Check if user is admin using PermissionMiddleware
+        if (PermissionMiddleware::isAdmin($user['id'])) {
+            $_SESSION['user_role'] = 'admin';
             $this->redirectWithMessage('/admin', 'Welcome back, Admin!', 'success');
         } else {
+            $_SESSION['user_role'] = 'user';
             $this->redirectWithMessage('/dashboard', 'Welcome back!', 'success');
         }
     }
@@ -346,6 +350,124 @@ class AuthController extends BaseController {
         ";
         
         return $this->sendEmail($user['email'], $subject, $body);
+    }
+    
+    // ===== SOCIAL LOGIN METHODS =====
+    
+    /**
+     * Redirect to Google OAuth
+     */
+    public function googleLogin() {
+        try {
+            $socialAuth = new SocialAuth();
+            $authUrl = $socialAuth->getGoogleAuthUrl();
+            header('Location: ' . $authUrl);
+            exit;
+        } catch (Exception $e) {
+            $this->redirectWithMessage('/login', 'Google login is not available: ' . $e->getMessage(), 'error');
+        }
+    }
+    
+    /**
+     * Handle Google OAuth callback
+     */
+    public function googleCallback() {
+        $code = $_GET['code'] ?? '';
+        $state = $_GET['state'] ?? '';
+        
+        if (empty($code)) {
+            $this->redirectWithMessage('/login', 'Google login was cancelled or failed.', 'error');
+        }
+        
+        try {
+            $socialAuth = new SocialAuth();
+            $user = $socialAuth->handleGoogleCallback($code, $state);
+            
+            if ($user) {
+                $this->loginSocialUser($user);
+            } else {
+                $this->redirectWithMessage('/login', 'Failed to login with Google.', 'error');
+            }
+        } catch (Exception $e) {
+            $this->redirectWithMessage('/login', 'Google login failed: ' . $e->getMessage(), 'error');
+        }
+    }
+    
+    /**
+     * Redirect to Facebook OAuth
+     */
+    public function facebookLogin() {
+        try {
+            $socialAuth = new SocialAuth();
+            $authUrl = $socialAuth->getFacebookAuthUrl();
+            header('Location: ' . $authUrl);
+            exit;
+        } catch (Exception $e) {
+            $this->redirectWithMessage('/login', 'Facebook login is not available: ' . $e->getMessage(), 'error');
+        }
+    }
+    
+    /**
+     * Handle Facebook OAuth callback
+     */
+    public function facebookCallback() {
+        $code = $_GET['code'] ?? '';
+        $state = $_GET['state'] ?? '';
+        
+        if (empty($code)) {
+            $this->redirectWithMessage('/login', 'Facebook login was cancelled or failed.', 'error');
+        }
+        
+        try {
+            $socialAuth = new SocialAuth();
+            $user = $socialAuth->handleFacebookCallback($code, $state);
+            
+            if ($user) {
+                $this->loginSocialUser($user);
+            } else {
+                $this->redirectWithMessage('/login', 'Failed to login with Facebook.', 'error');
+            }
+        } catch (Exception $e) {
+            $this->redirectWithMessage('/login', 'Facebook login failed: ' . $e->getMessage(), 'error');
+        }
+    }
+    
+    /**
+     * Login user from social authentication
+     */
+    private function loginSocialUser($user) {
+        if ($user['status'] === 'blocked') {
+            $this->redirectWithMessage('/login', 'Your account has been blocked. Please contact support.', 'error');
+        }
+        
+        // Get user profile information
+        $profileModel = new ProfileModel();
+        $profile = $profileModel->findByUserId($user['id']);
+        
+        // Set session variables
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_email'] = $user['email'];
+        $_SESSION['user_role'] = $user['role'];
+        $_SESSION['dark_mode'] = $user['dark_mode'] ?? 0;
+        $_SESSION['user_name'] = $profile ? trim($profile['first_name'] . ' ' . $profile['last_name']) : null;
+        $_SESSION['first_name'] = $profile ? $profile['first_name'] : '';
+        $_SESSION['last_name'] = $profile ? $profile['last_name'] : '';
+        
+        // Log the login
+        $this->userModel->logLogin(
+            $user['id'],
+            $_SERVER['REMOTE_ADDR'],
+            $_SERVER['HTTP_USER_AGENT']
+        );
+        
+        // Check if user is admin using PermissionMiddleware
+        if (PermissionMiddleware::isAdmin($user['id'])) {
+            $_SESSION['user_role'] = 'admin';
+            $this->redirectWithMessage('/admin', 'Welcome back, Admin!', 'success');
+        } else {
+            $_SESSION['user_role'] = 'user';
+            $this->redirectWithMessage('/dashboard', 'Welcome back!', 'success');
+        }
     }
 }
 ?>

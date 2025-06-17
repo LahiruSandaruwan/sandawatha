@@ -23,10 +23,14 @@ class Router {
         $this->addRoute('GET', '/reset-password', 'AuthController', 'resetPasswordForm');
         $this->addRoute('POST', '/reset-password', 'AuthController', 'resetPassword');
         
+        // Social login routes (Google only)
+        $this->addRoute('GET', '/auth/google', 'AuthController', 'googleLogin');
+        $this->addRoute('GET', '/auth/google/callback', 'AuthController', 'googleCallback');
+        
         // Public browsing and search
         $this->addRoute('GET', '/browse', 'ProfileController', 'browse');
         $this->addRoute('POST', '/search', 'ProfileController', 'search');
-        $this->addRoute('GET', '/profile/([0-9]+)', 'ProfileController', 'viewProfile');
+        $this->addRoute('GET', '/profile/([a-f0-9\-]{36})', 'ProfileController', 'viewProfile');
         
         // Protected routes (require authentication)
         $this->addRoute('GET', '/dashboard', 'DashboardController', 'index', ['auth']);
@@ -64,7 +68,7 @@ class Router {
         
         // Messages
         $this->addRoute('GET', '/messages', 'MessageController', 'inbox', ['auth']);
-        $this->addRoute('GET', '/messages/(\d+)', 'MessageController', 'viewMessage', ['auth']);
+        $this->addRoute('GET', '/messages/([a-f0-9\-]{36})', 'MessageController', 'viewMessage', ['auth']);
         $this->addRoute('POST', '/messages/send', 'MessageController', 'send', ['auth']);
         $this->addRoute('POST', '/messages/reply', 'MessageController', 'reply', ['auth']);
         $this->addRoute('POST', '/messages/delete', 'MessageController', 'delete', ['auth']);
@@ -98,12 +102,19 @@ class Router {
         $this->addRoute('GET', '/api/castes', 'ApiController', 'castes');
         $this->addRoute('POST', '/api/check-compatibility', 'ApiController', 'checkCompatibility', ['auth']);
         
-        // Chat routes
+        // Enhanced Chat routes
         $this->addRoute('GET', '/messages/chat/([0-9]+)', 'MessageController', 'chat', ['auth']);
         $this->addRoute('POST', '/chat/send-message', 'ChatController', 'sendMessage', ['auth']);
+        $this->addRoute('POST', '/chat/upload-file', 'ChatController', 'uploadFile', ['auth']);
         $this->addRoute('POST', '/chat/initiate-call', 'ChatController', 'initiateCall', ['auth']);
         $this->addRoute('POST', '/chat/update-call-status', 'ChatController', 'updateCallStatus', ['auth']);
+        $this->addRoute('POST', '/chat/call-signal', 'ChatController', 'handleCallSignaling', ['auth']);
+        $this->addRoute('GET', '/chat/call-history', 'ChatController', 'getCallHistory', ['auth']);
         $this->addRoute('POST', '/chat/update-online-status', 'ChatController', 'updateOnlineStatus', ['auth']);
+        $this->addRoute('GET', '/api/chat/usage-stats', 'ChatController', 'getUsageStats', ['auth']);
+        $this->addRoute('GET', '/api/chat/online-users', 'ChatController', 'getOnlineUsers', ['auth']);
+        $this->addRoute('POST', '/api/chat/mark-read', 'ChatController', 'markMessageRead', ['auth']);
+        $this->addRoute('GET', '/api/chat/history', 'ChatController', 'getConversationHistory', ['auth']);
     }
     
     public function addRoute($method, $pattern, $controller, $action, $middlewares = []) {

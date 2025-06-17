@@ -1,5 +1,25 @@
 {
     "require": {
-        "cboden/ratchet": "^0.4.4"
+        "cboden/ratchet": "^0.4.4",
+        "league/oauth2-google": "^4.0",
+        "league/oauth2-facebook": "^2.2"
+    },
+    "scripts": {
+        "serve": "php -S localhost:8000 -t public",
+        "websocket": "php bin/websocket_server.php",
+        "dev": "php bin/simple-dev-server.php",
+        "start": "@dev",
+        "post-install-cmd": [
+            "@php -r \"if (!file_exists('logs')) mkdir('logs', 0755, true);\""
+        ],
+        "post-update-cmd": [
+            "@php -r \"if (!file_exists('logs')) mkdir('logs', 0755, true);\""
+        ]
+    },
+    "scripts-descriptions": {
+        "serve": "Start the web application server (http://localhost:8000)",
+        "websocket": "Start the WebSocket server for real-time messaging (ws://localhost:8080)",
+        "dev": "Start both web and WebSocket servers for development",
+        "start": "Alias for dev command"
     }
 }
