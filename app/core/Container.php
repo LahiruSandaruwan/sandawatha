@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core;
+namespace App\core;
 
 class Container {
     private static $instance = null;
@@ -81,16 +81,16 @@ class Container {
         $dependencies = [];
         
         foreach ($constructor->getParameters() as $parameter) {
-            $dependency = $parameter->getClass();
+            $type = $parameter->getType();
             
-            if (is_null($dependency)) {
+            if (!$type || $type->isBuiltin()) {
                 if ($parameter->isDefaultValueAvailable()) {
                     $dependencies[] = $parameter->getDefaultValue();
                 } else {
                     throw new \Exception("Cannot resolve dependency \${$parameter->getName()}");
                 }
             } else {
-                $dependencies[] = self::make($dependency->name);
+                $dependencies[] = self::make($type->getName());
             }
         }
         
@@ -99,26 +99,26 @@ class Container {
     
     public static function registerDefaultBindings() {
         // Register core services
-        self::singleton('App\Services\UserService');
-        self::singleton('App\Services\ProfileService');
-        self::singleton('App\Services\ChatService');
-        self::singleton('App\Services\MessageService');
+        self::singleton('App\services\UserService');
+        self::singleton('App\services\ProfileService');
+        self::singleton('App\services\ChatService');
+        self::singleton('App\services\MessageService');
         
         // Register models
-        self::singleton('App\Models\UserModel');
-        self::singleton('App\Models\ProfileModel');
-        self::singleton('App\Models\ChatModel');
-        self::singleton('App\Models\MessageModel');
+        self::singleton('App\models\UserModel');
+        self::singleton('App\models\ProfileModel');
+        self::singleton('App\models\ChatModel');
+        self::singleton('App\models\MessageModel');
         
         // Register helpers
-        self::singleton('App\Helpers\RateLimiter');
-        self::singleton('App\Helpers\CsrfProtection');
-        self::singleton('App\Helpers\FileUploadValidator');
+        self::singleton('App\helpers\RateLimiter');
+        self::singleton('App\helpers\CsrfProtection');
+        self::singleton('App\helpers\FileUploadValidator');
     }
     
     // Prevent cloning of the instance
     private function __clone() {}
     
     // Prevent unserializing of the instance
-    private function __wakeup() {}
+    public function __wakeup() {}
 } 

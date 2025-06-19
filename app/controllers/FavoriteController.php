@@ -1,13 +1,16 @@
 <?php
-require_once 'BaseController.php';
-require_once SITE_ROOT . '/app/models/FavoriteModel.php';
-require_once SITE_ROOT . '/app/models/ProfileModel.php';
+namespace App\controllers;
+
+use App\models\FavoriteModel;
+use App\models\ProfileModel;
+use Exception;
 
 class FavoriteController extends BaseController {
     private $favoriteModel;
     private $profileModel;
     
     public function __construct() {
+        parent::__construct();
         $this->favoriteModel = new FavoriteModel();
         $this->profileModel = new ProfileModel();
     }

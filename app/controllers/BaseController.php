@@ -1,27 +1,27 @@
 <?php
-require_once SITE_ROOT . '/app/helpers/functions.php';
-require_once SITE_ROOT . '/app/helpers/CsrfProtection.php';
-require_once SITE_ROOT . '/app/helpers/FileUploadValidator.php';
-require_once SITE_ROOT . '/app/core/Container.php';
+namespace App\controllers;
 
-use App\Core\Container;
+use App\core\Container;
+use App\helpers\CsrfProtection;
+use App\helpers\FileUploadValidator;
+use App\models\UserModel;
+use App\models\ProfileModel;
 
 abstract class BaseController {
     protected $container;
+    protected $sections = [];
+    protected $currentSection = null;
+    protected $content = '';
     
     public function __construct() {
         // Initialize container and register default bindings
         Container::registerDefaultBindings();
         $this->container = Container::getInstance();
         
-        // Start session if not already started
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        
         // Regenerate session ID periodically to prevent session fixation
-        if (!isset($_SESSION['last_regeneration']) || 
-            (time() - $_SESSION['last_regeneration']) > 300) { // 5 minutes
+        if (session_status() === PHP_SESSION_ACTIVE && 
+            (!isset($_SESSION['last_regeneration']) || 
+            (time() - $_SESSION['last_regeneration']) > 300)) { // 5 minutes
             session_regenerate_id(true);
             $_SESSION['last_regeneration'] = time();
         }
@@ -29,6 +29,9 @@ abstract class BaseController {
     
     protected function view($view, $data = []) {
         extract($data);
+        
+        // Start output buffering
+        ob_start();
         
         // Include the view file
         $viewFile = SITE_ROOT . '/app/views/' . $view . '.php';
@@ -38,13 +41,35 @@ abstract class BaseController {
         } else {
             throw new Exception("View file not found: " . $view);
         }
+        
+        // Get the buffered content
+        $content = ob_get_clean();
+        
+        // If we're not using sections, just return the content
+        if (empty($this->sections)) {
+            echo $content;
+        }
+        
+        return $content;
     }
     
     protected function layout($layout, $view, $data = []) {
-        $data['content_view'] = $view;
+        // First render the content view to capture any sections
+        $content = $this->view($view, $data);
+        
+        // If no sections were defined, set the content as the default section
+        if (empty($this->sections)) {
+            $this->sections['content'] = $content;
+        }
+        
+        // Add the sections to the data array
+        $data['sections'] = $this->sections;
         
         // Extract data to make variables available in the layout
         extract($data);
+        
+        // Start output buffering for the layout
+        ob_start();
         
         // Include the layout file
         $layoutFile = SITE_ROOT . '/app/views/layouts/' . $layout . '.php';
@@ -52,8 +77,31 @@ abstract class BaseController {
         if (file_exists($layoutFile)) {
             include $layoutFile;
         } else {
-            throw new Exception("Layout file not found: " . $layout);
+            throw new \Exception("Layout file not found: " . $layout);
         }
+        
+        // Output the layout content
+        echo ob_get_clean();
+    }
+    
+    public function startSection($name) {
+        $this->currentSection = $name;
+        ob_start();
+    }
+    
+    public function endSection() {
+        if ($this->currentSection !== null) {
+            $this->sections[$this->currentSection] = ob_get_clean();
+            $this->currentSection = null;
+        }
+    }
+    
+    public function getSection($name, $default = '') {
+        return $this->sections[$name] ?? $default;
+    }
+    
+    public function hasSection($name) {
+        return isset($this->sections[$name]);
     }
     
     protected function json($data, $status = 200) {
@@ -65,7 +113,7 @@ abstract class BaseController {
     
     protected function redirect($url, $status = 302) {
         http_response_code($status);
-        header('Location: ' . BASE_URL . $url);
+        header('Location: ' . $url);
         exit;
     }
     
@@ -78,7 +126,7 @@ abstract class BaseController {
     protected function validateCsrf() {
         try {
             $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
-            return \App\Helpers\CsrfProtection::validateToken($token);
+            return \App\helpers\CsrfProtection::validateToken($token);
         } catch (Exception $e) {
             error_log("Error in validateCsrf: " . $e->getMessage());
             error_log("Stack trace: " . $e->getTraceAsString());
@@ -88,7 +136,7 @@ abstract class BaseController {
     
     protected function generateCsrf() {
         try {
-            return \App\Helpers\CsrfProtection::generateToken();
+            return \App\helpers\CsrfProtection::generateToken();
         } catch (Exception $e) {
             error_log("Error in generateCsrf: " . $e->getMessage());
             error_log("Stack trace: " . $e->getTraceAsString());
@@ -168,7 +216,7 @@ abstract class BaseController {
     }
     
     protected function uploadFile($file, $directory, $allowedTypes, $maxSize) {
-        $validator = new \App\Helpers\FileUploadValidator($allowedTypes, $maxSize);
+        $validator = new \App\helpers\FileUploadValidator($allowedTypes, $maxSize);
         
         if (!$validator->validate($file)) {
             throw new Exception(implode(', ', $validator->getErrors()));

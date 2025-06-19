@@ -1,5 +1,12 @@
 <?php
-// Root index.php
-require_once 'config/config.php';
-require_once 'app/helpers/functions.php';
-require_once 'routes/router.php';
+// Load Composer's autoloader
+require_once __DIR__ . '/vendor/autoload.php';
+
+// Load configuration
+require_once __DIR__ . '/config/config.php';
+
+// Get the request URL
+$url = $_SERVER['REQUEST_URI'] ?? '/';
+
+// Load and execute routes
+require_once __DIR__ . '/routes/web.php';

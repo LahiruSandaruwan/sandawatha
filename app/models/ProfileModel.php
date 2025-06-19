@@ -1,5 +1,9 @@
 <?php
-require_once 'BaseModel.php';
+
+namespace App\models;
+
+use PDO;
+use Exception;
 
 class ProfileModel extends BaseModel {
     protected $table = 'user_profiles';

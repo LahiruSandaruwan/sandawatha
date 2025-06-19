@@ -1,3 +1,4 @@
+<?php $this->startSection('content'); ?>
 <!-- Hero Section -->
 <section class="hero-section bg-primary text-white py-5">
     <div class="container">
@@ -209,133 +210,59 @@
     </div>
 </section>
 
-<!-- How It Works Section -->
-<section class="how-it-works-section py-5 bg-light">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="fw-bold mb-3">How It Works</h2>
-            <p class="text-muted">Simple steps to find your life partner</p>
-        </div>
-        
-        <div class="row g-4">
-            <div class="col-md-3 text-center">
-                <div class="step-number bg-primary text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                    <span class="fw-bold">1</span>
-                </div>
-                <h5 class="fw-bold mb-2">Register Free</h5>
-                <p class="text-muted">Create your account with email and phone verification</p>
-            </div>
-            
-            <div class="col-md-3 text-center">
-                <div class="step-number bg-primary text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                    <span class="fw-bold">2</span>
-                </div>
-                <h5 class="fw-bold mb-2">Complete Profile</h5>
-                <p class="text-muted">Add photos, horoscope, and personal details</p>
-            </div>
-            
-            <div class="col-md-3 text-center">
-                <div class="step-number bg-primary text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                    <span class="fw-bold">3</span>
-                </div>
-                <h5 class="fw-bold mb-2">Find Matches</h5>
-                <p class="text-muted">Browse profiles, use AI matching, and send contact requests</p>
-            </div>
-            
-            <div class="col-md-3 text-center">
-                <div class="step-number bg-primary text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                    <span class="fw-bold">4</span>
-                </div>
-                <h5 class="fw-bold mb-2">Start Chatting</h5>
-                <p class="text-muted">Connect, chat, and plan your future together</p>
-            </div>
-        </div>
-    </div>
-</section>
-
 <!-- Testimonials Section -->
 <section class="testimonials-section py-5 bg-light">
     <div class="container">
         <div class="text-center mb-5">
             <h2 class="fw-bold mb-3">Success Stories</h2>
-            <p class="text-muted">Real couples who found love through Sandawatha.lk</p>
+            <p class="text-muted">Hear from couples who found their perfect match on Sandawatha.lk</p>
         </div>
         
         <div class="row g-4">
-            <!-- First Success Story -->
             <div class="col-md-4">
-                <div class="testimonial-card bg-white p-4 rounded-4 shadow-sm h-100">
-                    <div class="couple-icon-large mb-4 mx-auto text-center">
-                        <img src="<?= BASE_URL ?>/assets/images/c1.png"
-                             alt="Priya & Kasun"
-                             class="couple-img"
-                             onerror="this.onerror=null;this.src='https://via.placeholder.com/240?text=Priya+%26+Kasun';">
-                    </div>
-                    <div class="text-warning mb-3">
+                <div class="testimonial-card text-center p-4">
+                    <img src="<?= BASE_URL ?>/assets/images/c1.png" alt="Couple" class="rounded-circle mb-3" width="100" height="100">
+                    <h5>Priya & Kasun</h5>
+                    <p class="text-muted mb-3">Married 2023</p>
+                    <p class="mb-3">"We found each other through Sandawatha.lk. The AI matching was amazing and helped us find our perfect match!"</p>
+                    <div class="text-warning">
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
-                    </div>
-                    <p class="text-muted mb-3">"We met through Sandawatha and instantly connected. The platform made it easy to find someone who shared our values and culture."</p>
-                    <div class="d-flex align-items-center">
-                        <div>
-                            <h6 class="mb-1">Priya & Kasun</h6>
-                            <small class="text-muted">Married 2 years</small>
-                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Second Success Story -->
             <div class="col-md-4">
-                <div class="testimonial-card bg-white p-4 rounded-4 shadow-sm h-100">
-                    <div class="couple-icon-large mb-4 mx-auto text-center">
-                        <img src="<?= BASE_URL ?>/assets/images/c2.png"
-                             alt="Nuwan & Dilini"
-                             class="couple-img"
-                             onerror="this.onerror=null;this.src='https://via.placeholder.com/240?text=Nuwan+%26+Dilini';">
-                    </div>
-                    <div class="text-warning mb-3">
+                <div class="testimonial-card text-center p-4">
+                    <img src="<?= BASE_URL ?>/assets/images/c2.png" alt="Couple" class="rounded-circle mb-3" width="100" height="100">
+                    <h5>Samantha & Nuwan</h5>
+                    <p class="text-muted mb-3">Married 2022</p>
+                    <p class="mb-3">"The horoscope matching feature was very helpful. We're so happy we found each other here!"</p>
+                    <div class="text-warning">
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
-                    </div>
-                    <p class="text-muted mb-3">"The matching system on Sandawatha helped us find each other. We're grateful for this platform bringing us together."</p>
-                    <div class="d-flex align-items-center">
-                        <div>
-                            <h6 class="mb-1">Nuwan & Dilini</h6>
-                            <small class="text-muted">Married 1 year</small>
-                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Third Success Story -->
             <div class="col-md-4">
-                <div class="testimonial-card bg-white p-4 rounded-4 shadow-sm h-100">
-                    <div class="couple-icon-large mb-4 mx-auto text-center">
-                        <img src="<?= BASE_URL ?>/assets/images/c3.png"
-                             alt="Chamara & Sachini"
-                             class="couple-img"
-                             onerror="this.onerror=null;this.src='https://via.placeholder.com/240?text=Chamara+%26+Sachini';">
-                    </div>
-                    <div class="text-warning mb-3">
+                <div class="testimonial-card text-center p-4">
+                    <img src="<?= BASE_URL ?>/assets/images/c3.png" alt="Couple" class="rounded-circle mb-3" width="100" height="100">
+                    <h5>Dilini & Chamara</h5>
+                    <p class="text-muted mb-3">Married 2023</p>
+                    <p class="mb-3">"The verification process made us feel safe. We found our perfect match and couldn't be happier!"</p>
+                    <div class="text-warning">
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
                         <i class="bi bi-star-fill"></i>
-                    </div>
-                    <p class="text-muted mb-3">"What started as a simple message on Sandawatha turned into a beautiful journey of love and understanding."</p>
-                    <div class="d-flex align-items-center">
-                        <div>
-                            <h6 class="mb-1">Chamara & Sachini</h6>
-                            <small class="text-muted">Married 6 months</small>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -343,26 +270,40 @@
     </div>
 </section>
 
-<!-- CTA Section -->
-<section class="cta-section bg-primary text-white py-5">
-    <div class="container text-center">
+<!-- Call to Action -->
+<section class="cta-section py-5 bg-primary text-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 text-center text-lg-start">
         <h2 class="fw-bold mb-3">Ready to Find Your Perfect Match?</h2>
-        <p class="lead mb-4">Join thousands of verified profiles and start your journey to finding true love today.</p>
-        
+                <p class="lead mb-lg-0">Join thousands of happy couples who found their life partner on Sandawatha.lk</p>
+            </div>
+            <div class="col-lg-4 text-center text-lg-end">
         <?php if (!isset($_SESSION['user_id'])): ?>
-            <a href="<?= BASE_URL ?>/register" class="btn btn-warning btn-lg me-3">
-                <i class="bi bi-person-plus"></i> Join Free Now
-            </a>
-            <a href="<?= BASE_URL ?>/browse" class="btn btn-outline-light btn-lg">
-                <i class="bi bi-search"></i> Browse Profiles
+                    <a href="<?= BASE_URL ?>/register" class="btn btn-warning btn-lg">
+                        <i class="bi bi-person-plus"></i> Join Free Today
             </a>
         <?php else: ?>
-            <a href="<?= BASE_URL ?>/browse" class="btn btn-warning btn-lg me-3">
-                <i class="bi bi-search"></i> Find Your Match
-            </a>
-            <a href="<?= BASE_URL ?>/premium" class="btn btn-outline-light btn-lg">
-                <i class="bi bi-star"></i> Upgrade to Premium
+                    <a href="<?= BASE_URL ?>/browse" class="btn btn-warning btn-lg">
+                        <i class="bi bi-search"></i> Find Matches
             </a>
         <?php endif; ?>
+            </div>
+        </div>
     </div>
 </section>
+<?php $this->endSection(); ?>
+
+<?php $this->startSection('scripts'); ?>
+<script>
+    // Fade in animations
+    document.addEventListener('DOMContentLoaded', function() {
+        const fadeElements = document.querySelectorAll('.fade-in');
+        fadeElements.forEach((element, index) => {
+            setTimeout(() => {
+                element.style.opacity = '1';
+            }, index * 200);
+        });
+    });
+</script>
+<?php $this->endSection(); ?>

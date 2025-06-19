@@ -99,8 +99,7 @@
                         <!-- Social Login Buttons -->
                         <?php 
                         try {
-                            require_once SITE_ROOT . '/app/helpers/SocialAuth.php';
-                            $availableProviders = SocialAuth::getAvailableProviders();
+                            $availableProviders = \App\helpers\SocialAuth::getAvailableProviders();
                         } catch (Exception $e) {
                             $availableProviders = []; // Fallback if there's an error
                         }

@@ -24,7 +24,7 @@
       data-user-first-name="<?= htmlspecialchars($_SESSION['first_name'] ?? '') ?>"
       data-user-last-name="<?= htmlspecialchars($_SESSION['last_name'] ?? '') ?>">
     
-    <?php include SITE_ROOT . '/app/views/partials/navbar.php'; ?>
+    <?php include SITE_ROOT . '/app/views/partials/header.php'; ?>
     
     <main class="container-fluid">
         <?php include SITE_ROOT . '/app/views/' . $content_view . '.php'; ?>

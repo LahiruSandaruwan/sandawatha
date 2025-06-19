@@ -1,5 +1,7 @@
 <?php
 
+namespace App\helpers;
+
 trait UuidTrait {
     
     /**

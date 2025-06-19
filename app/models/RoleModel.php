@@ -1,11 +1,21 @@
 <?php
-require_once 'BaseModel.php';
-require_once __DIR__ . '/../helpers/UuidTrait.php';
+
+namespace App\models;
+
+use App\helpers\UuidTrait;
+use Exception;
+use PDOException;
 
 class RoleModel extends BaseModel {
     use UuidTrait;
     
     protected $table = 'roles';
+    private $userRoleModel;
+    
+    public function __construct() {
+        parent::__construct();
+        $this->userRoleModel = new UserRoleModel();
+    }
     
     protected function getAllowedColumns() {
         return ['uuid', 'name', 'slug', 'description', 'permissions', 'is_active', 'created_at', 'updated_at'];
@@ -40,10 +50,7 @@ class RoleModel extends BaseModel {
      * Assign role to user
      */
     public function assignToUser($userId, $roleId, $assignedBy = null) {
-        require_once 'UserRoleModel.php';
-        $userRoleModel = new UserRoleModel();
-        
-        return $userRoleModel->create([
+        return $this->userRoleModel->create([
             'user_id' => $userId,
             'role_id' => $roleId,
             'assigned_by' => $assignedBy,
@@ -56,13 +63,10 @@ class RoleModel extends BaseModel {
      * Remove role from user
      */
     public function removeFromUser($userId, $roleId) {
-        require_once 'UserRoleModel.php';
-        $userRoleModel = new UserRoleModel();
-        
         $sql = "UPDATE user_roles SET is_active = 0 
                 WHERE user_id = :user_id AND role_id = :role_id";
         
-        return $userRoleModel->execute($sql, [
+        return $this->userRoleModel->execute($sql, [
             ':user_id' => $userId,
             ':role_id' => $roleId
         ]);

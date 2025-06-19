@@ -1,6 +1,8 @@
 <?php
-require_once 'BaseModel.php';
-require_once __DIR__ . '/../helpers/UuidTrait.php';
+
+namespace App\models;
+
+use App\helpers\UuidTrait;
 
 class UserModel extends BaseModel {
     use UuidTrait;

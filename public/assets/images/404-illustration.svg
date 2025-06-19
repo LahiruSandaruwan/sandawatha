@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background shapes -->
+    <circle cx="200" cy="150" r="120" fill="#EBF4FF" />
+    <circle cx="200" cy="150" r="90" fill="#C3DAFE" />
+    
+    <!-- Number 4 -->
+    <path d="M140 80V220M140 150H180M180 80V220" stroke="#4299E1" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Number 0 -->
+    <circle cx="240" cy="150" r="40" stroke="#4299E1" stroke-width="20"/>
+    
+    <!-- Number 4 -->
+    <path d="M300 80V220M300 150H340M340 80V220" stroke="#4299E1" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Decorative elements -->
+    <circle cx="100" cy="50" r="8" fill="#4299E1"/>
+    <circle cx="320" cy="250" r="6" fill="#4299E1"/>
+    <circle cx="50" cy="200" r="10" fill="#4299E1"/>
+    <circle cx="350" cy="100" r="7" fill="#4299E1"/>
+    
+    <!-- Small particles -->
+    <circle cx="80" cy="150" r="4" fill="#4299E1"/>
+    <circle cx="300" cy="50" r="3" fill="#4299E1"/>
+    <circle cx="150" cy="250" r="5" fill="#4299E1"/>
+    <circle cx="350" cy="180" r="4" fill="#4299E1"/>
+</svg> 

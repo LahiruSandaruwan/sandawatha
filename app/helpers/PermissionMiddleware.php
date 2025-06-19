@@ -1,5 +1,10 @@
 <?php
 
+namespace App\helpers;
+
+use App\models\RoleModel;
+use App\models\SubscriptionPackageModel;
+
 class PermissionMiddleware {
     
     private static $roleModel;
@@ -7,7 +12,6 @@ class PermissionMiddleware {
     
     private static function getRoleModel() {
         if (!self::$roleModel) {
-            require_once __DIR__ . '/../models/RoleModel.php';
             self::$roleModel = new RoleModel();
         }
         return self::$roleModel;
@@ -15,7 +19,6 @@ class PermissionMiddleware {
     
     private static function getPackageModel() {
         if (!self::$packageModel) {
-            require_once __DIR__ . '/../models/SubscriptionPackageModel.php';
             self::$packageModel = new SubscriptionPackageModel();
         }
         return self::$packageModel;
@@ -210,7 +213,7 @@ class PermissionMiddleware {
      * Check if user is admin
      */
     public static function isAdmin($userId = null) {
-        return self::hasRole('admin', $userId) || self::hasRole('super_admin', $userId);
+        return self::hasRole('admin', $userId);
     }
     
     /**

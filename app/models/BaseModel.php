@@ -1,5 +1,12 @@
 <?php
-require_once __DIR__ . '/../../config/database.php';
+
+namespace App\models;
+
+use PDO;
+use PDOException;
+use Exception;
+use InvalidArgumentException;
+use App\config\Database;
 
 abstract class BaseModel {
     protected $db;
@@ -31,11 +38,8 @@ abstract class BaseModel {
     
     protected function execute($sql, $params = []) {
         try {
-            error_log("\n=== Database Query ===");
-            error_log("SQL: " . $sql);
-            error_log("Parameters: " . json_encode($params));
-            
             $stmt = $this->db->prepare($sql);
+            
             if (!$stmt) {
                 $error = $this->db->errorInfo();
                 error_log("Failed to prepare statement: " . $error[2]);
@@ -44,7 +48,6 @@ abstract class BaseModel {
             
             foreach ($params as $key => $value) {
                 $type = is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR;
-                error_log("Binding {$key} = " . var_export($value, true) . " (type: {$type})");
                 if (!$stmt->bindValue($key, $value, $type)) {
                     $error = $stmt->errorInfo();
                     error_log("Failed to bind parameter {$key}: " . $error[2]);
@@ -53,7 +56,6 @@ abstract class BaseModel {
             }
             
             $result = $stmt->execute();
-            error_log("Query execution result: " . ($result ? "success" : "failed"));
             
             if (!$result) {
                 $error = $stmt->errorInfo();
@@ -63,50 +65,27 @@ abstract class BaseModel {
             
             return $stmt;
         } catch (PDOException $e) {
-            error_log("Database error in execute(): " . $e->getMessage());
-            error_log("SQL: " . $sql);
-            error_log("Parameters: " . json_encode($params));
-            error_log("Stack trace: " . $e->getTraceAsString());
+            error_log("Database error: " . $e->getMessage() . "\nSQL: " . $sql);
             throw $e;
         }
     }
     
     protected function fetchAll($sql, $params = []) {
         try {
-            error_log("\n=== Database Query (fetchAll) ===");
-            error_log("SQL: " . $sql);
-            error_log("Parameters: " . json_encode($params));
-            
             $stmt = $this->execute($sql, $params);
-            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            error_log("Query returned " . count($result) . " rows");
-            return $result;
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             error_log("Database error in fetchAll(): " . $e->getMessage());
-            error_log("SQL: " . $sql);
-            error_log("Parameters: " . json_encode($params));
-            error_log("Stack trace: " . $e->getTraceAsString());
             throw $e;
         }
     }
     
     protected function fetchOne($sql, $params = []) {
         try {
-            error_log("\n=== Database Query (fetchOne) ===");
-            error_log("SQL: " . $sql);
-            error_log("Parameters: " . json_encode($params));
-            
             $stmt = $this->execute($sql, $params);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            error_log("Query returned: " . ($result ? "1 row" : "no rows"));
-            return $result;
+            return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             error_log("Database error in fetchOne(): " . $e->getMessage());
-            error_log("SQL: " . $sql);
-            error_log("Parameters: " . json_encode($params));
-            error_log("Stack trace: " . $e->getTraceAsString());
             throw $e;
         }
     }

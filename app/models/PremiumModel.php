@@ -1,5 +1,11 @@
 <?php
-require_once 'BaseModel.php';
+
+namespace App\models;
+
+use Exception;
+use PDOException;
+use App\models\ContactRequestModel;
+
 
 class PremiumModel extends BaseModel {
     protected $table = 'premium_memberships';

@@ -1,16 +1,27 @@
 <?php
 
+// Load Composer's autoloader first
 require __DIR__ . '/../vendor/autoload.php';
-require __DIR__ . '/../config/config.php';
-require __DIR__ . '/../app/models/BaseModel.php';
-require __DIR__ . '/../app/models/ProfileModel.php';
+
+// Load database configuration
+require_once __DIR__ . '/../config/database.config.php';
+
+// Load configuration
+require_once __DIR__ . '/../config/config.php';
 
 use Ratchet\Server\IoServer;
 use Ratchet\Http\HttpServer;
 use Ratchet\WebSocket\WsServer;
 use React\EventLoop\Factory;
+use App\models\ProfileModel;
+use Ratchet\MessageComponentInterface;
+use Ratchet\ConnectionInterface;
 
-class ChatServer implements \Ratchet\MessageComponentInterface {
+// Set error reporting
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+class ChatServer implements MessageComponentInterface {
     protected $clients;
     protected $users;
     protected $profileModel;
@@ -19,12 +30,12 @@ class ChatServer implements \Ratchet\MessageComponentInterface {
         $this->clients = new \SplObjectStorage;
         $this->users = [];
         
-        // Initialize ProfileModel (it will handle its own database connection)
         try {
+            // Initialize ProfileModel
             $this->profileModel = new ProfileModel();
-            echo "WebSocket server started on port 8080\n";
+            echo "WebSocket server started successfully\n";
         } catch (\Exception $e) {
-            echo "Error initializing ProfileModel: " . $e->getMessage() . "\n";
+            echo "Error initializing WebSocket server: " . $e->getMessage() . "\n";
             exit(1);
         }
     }
@@ -214,7 +225,8 @@ $server = IoServer::factory(
             new ChatServer()
         )
     ),
-    8080
+    8082
 );
 
+echo "WebSocket server started successfully\n";
 $server->run(); 

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Services;
+namespace App\services;
 
-use App\Models\UserModel;
-use App\Models\ProfileModel;
-use App\Helpers\RateLimiter;
-use App\Helpers\CsrfProtection;
+use App\models\UserModel;
+use App\models\ProfileModel;
+use App\helpers\RateLimiter;
+use App\helpers\CsrfProtection;
 
 class UserService {
     private $userModel;

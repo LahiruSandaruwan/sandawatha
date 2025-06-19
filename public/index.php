@@ -1,31 +1,27 @@
 <?php
-// Define the site root path
-define('SITE_ROOT', dirname(__DIR__));
+// Load session configuration first
+require_once dirname(__DIR__) . '/config/session.php';
 
 // Load configuration
-require_once SITE_ROOT . '/config/config.php';
+require_once dirname(__DIR__) . '/config/config.php';
 
-// Register autoloader
-require_once SITE_ROOT . '/app/core/Autoloader.php';
-\App\Core\Autoloader::register();
+// Load Composer's autoloader
+require_once SITE_ROOT . '/vendor/autoload.php';
 
 // Initialize container
-\App\Core\Container::registerDefaultBindings();
+\App\core\Container::registerDefaultBindings();
 
-// Configure session first, before starting it
-ini_set('session.cookie_httponly', 1);
-ini_set('session.use_only_cookies', 1);
-ini_set('session.cookie_secure', isset($_SERVER['HTTPS']));
-ini_set('session.cookie_samesite', 'Lax');
-
-// Load configuration and required files
-require_once SITE_ROOT . '/config/database.php';
-require_once SITE_ROOT . '/app/helpers/functions.php';
-
-// Start session if not already started
+// Configure session settings before starting it
 if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.use_only_cookies', 1);
+    ini_set('session.cookie_secure', isset($_SERVER['HTTPS']));
+    ini_set('session.cookie_samesite', 'Lax');
     session_start();
 }
+
+// Load helper functions
+require_once SITE_ROOT . '/app/helpers/functions.php';
 
 // CORS headers for AJAX requests
 if (isset($_SERVER['HTTP_ORIGIN'])) {
@@ -68,7 +64,12 @@ header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
 $url = $_SERVER['REQUEST_URI'];
 $url = rtrim($url, '/');
 $url = filter_var($url, FILTER_SANITIZE_URL);
-$url = substr($url, strlen(BASE_URL));
+
+// Remove script name from URL if running under built-in server
+$scriptName = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+if ($scriptName !== '/' && strpos($url, $scriptName) === 0) {
+    $url = substr($url, strlen($scriptName));
+}
 
 // Route the request
 require_once SITE_ROOT . '/routes/web.php';

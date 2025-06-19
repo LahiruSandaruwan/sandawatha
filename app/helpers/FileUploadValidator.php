@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Helpers;
+namespace App\helpers;
 
 class FileUploadValidator {
     private $allowedTypes;

@@ -1,13 +1,17 @@
 <?php
-require_once 'BaseController.php';
-require_once SITE_ROOT . '/app/models/ProfileModel.php';
-require_once SITE_ROOT . '/app/models/UserModel.php';
+
+namespace App\controllers;
+
+use App\models\ProfileModel;
+use App\models\UserModel;
+use App\controllers\BaseController;
 
 class HomeController extends BaseController {
     private $profileModel;
     private $userModel;
     
     public function __construct() {
+        parent::__construct();
         $this->profileModel = new ProfileModel();
         $this->userModel = new UserModel();
     }
@@ -50,6 +54,16 @@ class HomeController extends BaseController {
         ];
         
         $this->layout('main', 'home/index', $data);
+    }
+
+    public function toggleDarkMode() {
+        $darkMode = $_POST['dark_mode'] ?? 0;
+        $_SESSION['dark_mode'] = (bool)$darkMode;
+        
+        // Return JSON response
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true]);
+        exit;
     }
 }
 ?>

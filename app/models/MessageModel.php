@@ -1,5 +1,7 @@
 <?php
-require_once 'BaseModel.php';
+namespace App\models;
+
+use App\models\BaseModel;
 
 class MessageModel extends BaseModel {
     protected $table = 'messages';

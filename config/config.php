@@ -3,11 +3,27 @@
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
 $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
-if ($scriptDir === '/' || $scriptDir === '\\') {
-    $scriptDir = '';
+
+// Fix for PHP built-in server
+if (php_sapi_name() === 'cli-server') {
+    define('BASE_URL', $protocol . '://' . $host);
+} else {
+    if ($scriptDir === '/' || $scriptDir === '\\') {
+        $scriptDir = '';
+    }
+    define('BASE_URL', $protocol . '://' . $host . $scriptDir);
 }
-define('BASE_URL', $protocol . '://' . $host . $scriptDir);
-define('SITE_ROOT', realpath(__DIR__ . '/../'));
+
+// Only define SITE_ROOT if not already defined
+if (!defined('SITE_ROOT')) {
+    define('SITE_ROOT', realpath(__DIR__ . '/../'));
+}
+
+// Create logs directory if it doesn't exist
+if (!is_dir(SITE_ROOT . '/logs')) {
+    mkdir(SITE_ROOT . '/logs', 0755, true);
+}
+
 define('UPLOAD_PATH', SITE_ROOT . '/public/uploads/');
 define('UPLOAD_URL', BASE_URL . '/uploads/');
 
@@ -84,24 +100,6 @@ ini_set('error_log', SITE_ROOT . '/logs/php_errors.log');
 // Timezone
 date_default_timezone_set('Asia/Colombo');
 
-// Session configuration
-ini_set('session.cookie_lifetime', SESSION_LIFETIME);
-ini_set('session.cookie_secure', isset($_SERVER['HTTPS']));
-ini_set('session.cookie_httponly', true);
-ini_set('session.cookie_samesite', 'Strict');
-ini_set('session.use_strict_mode', true);
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Database configuration for XAMPP
-define('DB_HOST', 'localhost');  // XAMPP uses localhost
-define('DB_PORT', '3306');       // Default XAMPP MySQL port
-define('DB_NAME', 'sandawatha_lk');
-define('DB_USER', 'root');       // Default XAMPP user
-define('DB_PASS', '');           // Default XAMPP has no password
-
 // Upload configuration
 define('UPLOAD_DIR', __DIR__ . '/../public/uploads');
 define('MAX_UPLOAD_SIZE', 5 * 1024 * 1024); // 5MB
@@ -120,6 +118,6 @@ define('PREMIUM_CONTACT_REQUESTS_PER_DAY', 50);
 define('FREE_MESSAGES_PER_DAY', 10);
 define('PREMIUM_MESSAGES_PER_DAY', 100);
 
-// Load database class
-require_once __DIR__ . '/database.php';  // Updated to lowercase
+// Load database configuration
+require_once __DIR__ . '/Database.php';
 ?>

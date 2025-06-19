@@ -10,7 +10,7 @@
                             <p class="text-muted">Sign in to your Sandawatha.lk account</p>
                         </div>
 
-                        <form method="POST" action="<?= BASE_URL ?>/login">
+                        <form method="POST" action="/login">
                             <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
                             
                             <div class="mb-3">
@@ -44,7 +44,7 @@
                                     </div>
                                 </div>
                                 <div class="col-6 text-end">
-                                    <a href="<?= BASE_URL ?>/forgot-password" class="text-decoration-none small">
+                                    <a href="/forgot-password" class="text-decoration-none small">
                                         Forgot password?
                                     </a>
                                 </div>
@@ -58,8 +58,7 @@
                         <!-- Social Login Buttons -->
                         <?php 
                         try {
-                            require_once SITE_ROOT . '/app/helpers/SocialAuth.php';
-                            $availableProviders = SocialAuth::getAvailableProviders();
+                            $availableProviders = \App\helpers\SocialAuth::getAvailableProviders();
                         } catch (Exception $e) {
                             $availableProviders = []; // Fallback if there's an error
                         }
@@ -77,7 +76,7 @@
                             
                             <div class="d-grid gap-2">
                                 <?php if (in_array('google', $availableProviders) || $showDemoButtons): ?>
-                                <a href="<?= BASE_URL ?>/auth/google" class="btn btn-outline-danger">
+                                <a href="/auth/google" class="btn btn-outline-danger">
                                     <i class="bi bi-google"></i> Continue with Google
                                     <?php if ($showDemoButtons && !in_array('google', $availableProviders)): ?>
                                     <small class="d-block text-muted">(Demo - requires configuration)</small>
@@ -100,7 +99,7 @@
                         <div class="text-center">
                             <p class="text-muted mb-0">
                                 Don't have an account? 
-                                <a href="<?= BASE_URL ?>/register" class="text-decoration-none fw-semibold">
+                                <a href="/register" class="text-decoration-none fw-semibold">
                                     Create one now
                                 </a>
                             </p>

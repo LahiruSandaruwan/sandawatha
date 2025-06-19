@@ -1,5 +1,18 @@
 // Sandawatha.lk Global JavaScript Functions
 
+// Check for jQuery
+if (typeof jQuery === 'undefined') {
+    console.error('jQuery is required but not loaded. Please ensure jQuery is loaded before app.js');
+    throw new Error('jQuery is required but not loaded');
+}
+
+// Performance Metrics
+const pageLoadStart = performance.now();
+window.addEventListener('load', () => {
+    const pageLoadTime = Math.round(performance.now() - pageLoadStart);
+    console.log(`Page load time: ${pageLoadTime}ms`);
+});
+
 // CSRF Token for AJAX requests
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
@@ -15,19 +28,29 @@ $.ajaxSetup({
 
 // Dark Mode Toggle
 function toggleDarkMode() {
-    const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-bs-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     
-    document.documentElement.setAttribute('data-bs-theme', newTheme);
+    // Add transition class
+    html.classList.add('dark-mode-transition');
+    
+    // Update theme
+    html.setAttribute('data-bs-theme', newTheme);
     updateDarkModeIcon();
     
     // Save preference via AJAX
-    $.post('/toggle-dark-mode', { 
+    $.post(BASE_URL + '/toggle-dark-mode', { 
         dark_mode: newTheme === 'dark' ? 1 : 0 
     });
     
     // Save to localStorage for guests
     localStorage.setItem('darkMode', newTheme);
+    
+    // Remove transition class after animation
+    setTimeout(() => {
+        html.classList.remove('dark-mode-transition');
+    }, 300);
 }
 
 function updateDarkModeIcon() {
@@ -35,16 +58,35 @@ function updateDarkModeIcon() {
     const currentTheme = document.documentElement.getAttribute('data-bs-theme');
     
     if (icon) {
-        icon.className = currentTheme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+        // Add fade effect
+        icon.style.opacity = '0';
+        setTimeout(() => {
+            icon.className = currentTheme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+            icon.style.opacity = '1';
+        }, 150);
     }
 }
 
 // Initialize dark mode on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Check for saved preference or default to light
-    const savedTheme = localStorage.getItem('darkMode') || 'light';
-    document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    // Check system preference
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Check for saved preference or use system preference
+    const savedTheme = localStorage.getItem('darkMode');
+    const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+    
+    // Set initial theme without transition
+    document.documentElement.setAttribute('data-bs-theme', theme);
     updateDarkModeIcon();
+    
+    // Listen for system theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        if (!localStorage.getItem('darkMode')) {
+            document.documentElement.setAttribute('data-bs-theme', e.matches ? 'dark' : 'light');
+            updateDarkModeIcon();
+        }
+    });
 });
 
 // Password Toggle Function
@@ -540,16 +582,6 @@ document.addEventListener('DOMContentLoaded', function() {
             bsAlert.close();
         });
     }, 5000);
-});
-
-
-// Performance monitoring
-window.addEventListener('load', function() {
-    const perfData = window.performance.getEntriesByType('navigation')[0];
-    if (perfData) {
-        const loadTime = Math.round(perfData.loadEventEnd - perfData.navigationStart);
-        console.log('Page load time:', loadTime + 'ms');
-    }
 });
 
 // Error handling for uncaught errors

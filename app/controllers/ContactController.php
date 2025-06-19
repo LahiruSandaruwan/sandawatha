@@ -1,8 +1,11 @@
 <?php
-require_once 'BaseController.php';
-require_once SITE_ROOT . '/app/models/ContactRequestModel.php';
-require_once SITE_ROOT . '/app/models/ProfileModel.php';
-require_once SITE_ROOT . '/app/models/PremiumModel.php';
+
+namespace App\controllers;
+
+use App\models\ContactRequestModel;
+use App\models\ProfileModel;
+use App\models\PremiumModel;
+use Exception;
 
 class ContactController extends BaseController {
     private $contactModel;
@@ -10,9 +13,10 @@ class ContactController extends BaseController {
     private $premiumModel;
     
     public function __construct() {
-        $this->contactModel = new ContactRequestModel();
-        $this->profileModel = new ProfileModel();
-        $this->premiumModel = new PremiumModel();
+        parent::__construct();
+        $this->contactModel = $this->container->make(ContactRequestModel::class);
+        $this->profileModel = $this->container->make(ProfileModel::class);
+        $this->premiumModel = $this->container->make(PremiumModel::class);
     }
     
     public function send() {
@@ -133,7 +137,7 @@ class ContactController extends BaseController {
         }
         
         $tab = $_GET['tab'] ?? 'received';
-        $page = $_GET['page'] ?? 1;
+        $page = (int)($_GET['page'] ?? 1);
         
         $receivedRequests = [];
         $sentRequests = [];
@@ -141,17 +145,48 @@ class ContactController extends BaseController {
         
         if ($tab === 'received' || $tab === 'all') {
             $receivedRequests = $this->contactModel->getReceivedRequests($currentUser['id'], $page, 20);
+            // Add profile photos
+            foreach ($receivedRequests as &$request) {
+                $request['profile_photo'] = $this->getProfilePhotoUrl($request['profile_photo'] ?? null);
+                $request['first_name'] = $request['first_name'] ?? '';
+                $request['last_name'] = $request['last_name'] ?? '';
+                $request['district'] = $request['district'] ?? '';
+                $request['message'] = $request['message'] ?? '';
+                $request['age'] = $request['age'] ?? '';
+            }
         }
         
         if ($tab === 'sent' || $tab === 'all') {
             $sentRequests = $this->contactModel->getSentRequests($currentUser['id'], $page, 20);
+            // Add profile photos
+            foreach ($sentRequests as &$request) {
+                $request['profile_photo'] = $this->getProfilePhotoUrl($request['profile_photo'] ?? null);
+                $request['first_name'] = $request['first_name'] ?? '';
+                $request['last_name'] = $request['last_name'] ?? '';
+                $request['district'] = $request['district'] ?? '';
+                $request['message'] = $request['message'] ?? '';
+                $request['age'] = $request['age'] ?? '';
+            }
         }
         
         if ($tab === 'contacts' || $tab === 'all') {
             $acceptedContacts = $this->contactModel->getAcceptedContacts($currentUser['id']);
+            // Add profile photos
+            foreach ($acceptedContacts as &$contact) {
+                $contact['profile_photo'] = $this->getProfilePhotoUrl($contact['profile_photo'] ?? null);
+                $contact['first_name'] = $contact['first_name'] ?? '';
+                $contact['last_name'] = $contact['last_name'] ?? '';
+                $contact['email'] = $contact['email'] ?? '';
+                $contact['phone'] = $contact['phone'] ?? '';
+            }
         }
         
         $stats = $this->contactModel->getRequestStats($currentUser['id']);
+        $stats = [
+            'pending_received' => $stats['pending_received'] ?? 0,
+            'pending_sent' => $stats['pending_sent'] ?? 0,
+            'accepted' => $stats['accepted'] ?? 0
+        ];
         
         $data = [
             'title' => 'Contact Requests - Sandawatha.lk',
@@ -162,10 +197,24 @@ class ContactController extends BaseController {
             'current_tab' => $tab,
             'current_page' => $page,
             'csrf_token' => $this->generateCsrf(),
-            'scripts' => ['contact-requests']
+            'component_js' => ['contact-requests']
         ];
         
         $this->layout('main', 'contacts/list', $data);
+    }
+    
+    private function getProfilePhotoUrl($photo) {
+        if (empty($photo)) {
+            return BASE_URL . '/assets/images/default-avatar.png';
+        }
+        
+        // If it's already a full URL, return as is
+        if (strpos($photo, 'http') === 0) {
+            return $photo;
+        }
+        
+        // If it's a relative path, make it absolute
+        return BASE_URL . '/uploads/profiles/' . $photo;
     }
 }
 ?>

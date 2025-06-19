@@ -1,15 +1,21 @@
 <?php
-require_once 'BaseController.php';
-require_once SITE_ROOT . '/app/models/ProfileModel.php';
-require_once SITE_ROOT . '/app/models/UserModel.php';
+
+namespace App\controllers;
+
+use App\models\ProfileModel;
+use App\models\UserModel;
+use App\models\ContactRequestModel;
+use DateTime;
+use Exception;
 
 class ProfileController extends BaseController {
     private $profileModel;
     private $userModel;
     
     public function __construct() {
-        $this->profileModel = new ProfileModel();
-        $this->userModel = new UserModel();
+        parent::__construct();
+        $this->profileModel = $this->container->make(ProfileModel::class);
+        $this->userModel = $this->container->make(UserModel::class);
     }
     
     public function browse() {
@@ -73,7 +79,6 @@ class ProfileController extends BaseController {
             // Get contact status if user is logged in
             $contactStatus = null;
             if ($viewerId) {
-                require_once SITE_ROOT . '/app/models/ContactRequestModel.php';
                 $contactModel = new ContactRequestModel();
                 $request = $contactModel->getRequestBetweenUsers($viewerId, $userId);
                 $contactStatus = $request ? $request['status'] : null;

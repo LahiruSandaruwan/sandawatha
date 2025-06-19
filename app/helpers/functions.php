@@ -3,12 +3,18 @@
 /**
  * Convert a timestamp to a human-readable time ago string
  * 
- * @param string $datetime MySQL datetime string
+ * @param string|null $datetime MySQL datetime string
  * @return string Human readable time difference
  */
 function timeAgo($datetime) {
-    $timestamp = strtotime($datetime);
-    $difference = time() - $timestamp;
+    if (!$datetime) {
+        return 'unknown time';
+    }
+    
+    try {
+        $date = new DateTime($datetime);
+        $now = new DateTime();
+        $difference = $now->getTimestamp() - $date->getTimestamp();
     
     if ($difference < 60) {
         return 'just now';
@@ -34,6 +40,9 @@ function timeAgo($datetime) {
     }
     
     return 'just now';
+    } catch (Exception $e) {
+        return 'unknown time';
+    }
 }
 
 /**

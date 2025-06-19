@@ -4,11 +4,16 @@
         "league/oauth2-google": "^4.0",
         "league/oauth2-facebook": "^2.2"
     },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "App\\config\\": "config/"
+        }
+    },
     "scripts": {
-        "serve": "php -S localhost:8000 -t public",
+        "serve": "php -S localhost:8081 -t public",
         "websocket": "php bin/websocket_server.php",
         "dev": "php bin/simple-dev-server.php",
-        "start": "@dev",
         "post-install-cmd": [
             "@php -r \"if (!file_exists('logs')) mkdir('logs', 0755, true);\""
         ],
@@ -17,9 +22,10 @@
         ]
     },
     "scripts-descriptions": {
-        "serve": "Start the web application server (http://localhost:8000)",
-        "websocket": "Start the WebSocket server for real-time messaging (ws://localhost:8080)",
-        "dev": "Start both web and WebSocket servers for development",
-        "start": "Alias for dev command"
+        "serve": "Start the web application server (http://localhost:8081)",
+        "websocket": "Start the WebSocket server for real-time messaging (ws://localhost:8082)",
+        "dev": "Start both web server and WebSocket server using the development environment",
+        "post-install-cmd": "Create necessary directories after package installation",
+        "post-update-cmd": "Create necessary directories after package updates"
     }
 }

@@ -1,5 +1,6 @@
 <?php
-require_once 'BaseModel.php';
+
+namespace App\models;
 
 class LoginLogModel extends BaseModel {
     protected $table = 'login_logs';

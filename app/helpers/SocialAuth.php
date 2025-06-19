@@ -1,35 +1,36 @@
 <?php
 
-require_once __DIR__ . '/../../vendor/autoload.php';
-require_once __DIR__ . '/../models/UserModel.php';
-require_once __DIR__ . '/../models/ProfileModel.php';
+namespace App\helpers;
 
 use League\OAuth2\Client\Provider\Google;
 use League\OAuth2\Client\Provider\Facebook;
+use App\models\UserModel;
+use App\models\ProfileModel;
+use Exception;
 
 class SocialAuth {
     
-    private $googleProvider;
-    private $facebookProvider;
-    private $userModel;
-    private $profileModel;
+    private static $googleProvider;
+    private static $facebookProvider;
+    private static $userModel;
+    private static $profileModel;
     
     public function __construct() {
-        $this->userModel = new UserModel();
-        $this->profileModel = new ProfileModel();
+        self::$userModel = new UserModel();
+        self::$profileModel = new ProfileModel();
         
         // Load environment variables if .env file exists
-        $this->loadEnvVariables();
+        self::loadEnvVariables();
         
         // Initialize Google OAuth provider
-        $this->googleProvider = new Google([
+        self::$googleProvider = new Google([
             'clientId'     => $_ENV['GOOGLE_CLIENT_ID'] ?? '',
             'clientSecret' => $_ENV['GOOGLE_CLIENT_SECRET'] ?? '',
             'redirectUri'  => BASE_URL . '/auth/google/callback',
         ]);
         
         // Initialize Facebook OAuth provider (optional - keeping for future use)
-        $this->facebookProvider = new Facebook([
+        self::$facebookProvider = new Facebook([
             'clientId'     => $_ENV['FACEBOOK_APP_ID'] ?? '',
             'clientSecret' => $_ENV['FACEBOOK_APP_SECRET'] ?? '',
             'redirectUri'  => BASE_URL . '/auth/facebook/callback',
@@ -38,9 +39,47 @@ class SocialAuth {
     }
     
     /**
+     * Get list of available social login providers
+     */
+    public static function getAvailableProviders() {
+        $providers = [];
+        
+        // Check Google configuration
+        if (self::isConfigured('google')) {
+            $providers[] = 'google';
+        }
+        
+        // Check Facebook configuration
+        if (self::isConfigured('facebook')) {
+            $providers[] = 'facebook';
+        }
+        
+        return $providers;
+    }
+    
+    /**
+     * Check if a provider is configured
+     */
+    public static function isConfigured($provider = null) {
+        // Load environment variables if needed
+        if (!isset($_ENV['GOOGLE_CLIENT_ID'])) {
+            self::loadEnvVariables();
+        }
+        
+        switch ($provider) {
+            case 'google':
+                return !empty($_ENV['GOOGLE_CLIENT_ID']) && !empty($_ENV['GOOGLE_CLIENT_SECRET']);
+            case 'facebook':
+                return !empty($_ENV['FACEBOOK_APP_ID']) && !empty($_ENV['FACEBOOK_APP_SECRET']);
+            default:
+                return false;
+        }
+    }
+    
+    /**
      * Load environment variables from .env file
      */
-    private function loadEnvVariables() {
+    private static function loadEnvVariables() {
         $envFile = SITE_ROOT . '/.env';
         if (file_exists($envFile)) {
             $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -65,8 +104,8 @@ class SocialAuth {
             'scope' => ['openid', 'email', 'profile']
         ];
         
-        $authUrl = $this->googleProvider->getAuthorizationUrl($options);
-        $_SESSION['oauth2state'] = $this->googleProvider->getState();
+        $authUrl = self::$googleProvider->getAuthorizationUrl($options);
+        $_SESSION['oauth2state'] = self::$googleProvider->getState();
         
         return $authUrl;
     }
@@ -79,8 +118,8 @@ class SocialAuth {
             'scope' => ['email', 'public_profile']
         ];
         
-        $authUrl = $this->facebookProvider->getAuthorizationUrl($options);
-        $_SESSION['oauth2state'] = $this->facebookProvider->getState();
+        $authUrl = self::$facebookProvider->getAuthorizationUrl($options);
+        $_SESSION['oauth2state'] = self::$facebookProvider->getState();
         
         return $authUrl;
     }
@@ -97,12 +136,12 @@ class SocialAuth {
         
         try {
             // Get access token
-            $token = $this->googleProvider->getAccessToken('authorization_code', [
+            $token = self::$googleProvider->getAccessToken('authorization_code', [
                 'code' => $code
             ]);
             
             // Get user details
-            $user = $this->googleProvider->getResourceOwner($token);
+            $user = self::$googleProvider->getResourceOwner($token);
             $userData = $user->toArray();
             
             return $this->processUserData($userData, 'google');
@@ -124,12 +163,12 @@ class SocialAuth {
         
         try {
             // Get access token
-            $token = $this->facebookProvider->getAccessToken('authorization_code', [
+            $token = self::$facebookProvider->getAccessToken('authorization_code', [
                 'code' => $code
             ]);
             
             // Get user details
-            $user = $this->facebookProvider->getResourceOwner($token);
+            $user = self::$facebookProvider->getResourceOwner($token);
             $userData = $user->toArray();
             
             return $this->processUserData($userData, 'facebook');
@@ -150,7 +189,7 @@ class SocialAuth {
         }
         
         // Check if user already exists
-        $existingUser = $this->userModel->findByEmail($email);
+        $existingUser = self::$userModel->findByEmail($email);
         
         if ($existingUser) {
             // User exists, update social login info if needed
@@ -184,7 +223,7 @@ class SocialAuth {
         
         try {
             // Create user account
-            $userId = $this->userModel->createSocialUser(
+            $userId = self::$userModel->createSocialUser(
                 $email,
                 $randomPassword,
                 $provider,
@@ -193,7 +232,7 @@ class SocialAuth {
             
             if ($userId) {
                 // Create profile
-                $this->profileModel->createFromSocialData($userId, [
+                self::$profileModel->createFromSocialData($userId, [
                     'first_name' => $firstName,
                     'last_name' => $lastName,
                     'email' => $email,
@@ -201,7 +240,7 @@ class SocialAuth {
                     'social_provider' => $provider
                 ]);
                 
-                return $this->userModel->find($userId);
+                return self::$userModel->find($userId);
             }
             
             throw new Exception('Failed to create user account');
@@ -216,44 +255,14 @@ class SocialAuth {
      */
     private function updateSocialLoginInfo($userId, $provider, $userData) {
         // Update social provider info in user table
-        $this->userModel->updateSocialProvider($userId, $provider, $userData['id'] ?? null);
+        self::$userModel->updateSocialProvider($userId, $provider, $userData['id'] ?? null);
         
         // Update profile picture if available and not already set
         if (isset($userData['picture'])) {
-            $profile = $this->profileModel->findByUserId($userId);
+            $profile = self::$profileModel->findByUserId($userId);
             if ($profile && empty($profile['profile_picture'])) {
-                $this->profileModel->updateProfilePicture($userId, $userData['picture']);
+                self::$profileModel->updateProfilePicture($userId, $userData['picture']);
             }
         }
-    }
-    
-    /**
-     * Check if social login is configured
-     */
-    public static function isConfigured($provider = null) {
-        if ($provider === 'google') {
-            return !empty($_ENV['GOOGLE_CLIENT_ID']) && !empty($_ENV['GOOGLE_CLIENT_SECRET']);
-        } elseif ($provider === 'facebook') {
-            return !empty($_ENV['FACEBOOK_APP_ID']) && !empty($_ENV['FACEBOOK_APP_SECRET']);
-        }
-        
-        return self::isConfigured('google') || self::isConfigured('facebook');
-    }
-    
-    /**
-     * Get available social providers
-     */
-    public static function getAvailableProviders() {
-        $providers = [];
-        
-        if (self::isConfigured('google')) {
-            $providers[] = 'google';
-        }
-        
-        if (self::isConfigured('facebook')) {
-            $providers[] = 'facebook';
-        }
-        
-        return $providers;
     }
 } 

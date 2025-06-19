@@ -1,14 +1,18 @@
 <?php
-require_once 'BaseController.php';
-require_once SITE_ROOT . '/app/models/MessageModel.php';
-require_once SITE_ROOT . '/app/models/PremiumModel.php';
-require_once SITE_ROOT . '/app/models/ProfileModel.php';
+namespace App\controllers;
+
+use App\models\MessageModel;
+use App\models\PremiumModel;
+use App\models\ProfileModel;
+use App\helpers\PermissionMiddleware;
+use Exception;
 
 class MessageController extends BaseController {
     private $messageModel;
     private $premiumModel;
     
     public function __construct() {
+        parent::__construct();
         $this->messageModel = new MessageModel();
         $this->premiumModel = new PremiumModel();
     }
@@ -129,8 +133,6 @@ class MessageController extends BaseController {
         }
         
         // Check daily limit using new permission system
-        require_once SITE_ROOT . '/app/helpers/PermissionMiddleware.php';
-        
         if (PermissionMiddleware::hasReachedLimit('daily_messages', $currentUser['id'])) {
             $packageInfo = PermissionMiddleware::getUserPackageInfo($currentUser['id']);
             $packageName = $packageInfo ? $packageInfo['name'] : 'Basic';
@@ -192,8 +194,6 @@ class MessageController extends BaseController {
                      $parentMessage['receiver_id'] : $parentMessage['sender_id'];
         
         // Check daily limit using new permission system
-        require_once SITE_ROOT . '/app/helpers/PermissionMiddleware.php';
-        
         if (PermissionMiddleware::hasReachedLimit('daily_messages', $currentUser['id'])) {
             $packageInfo = PermissionMiddleware::getUserPackageInfo($currentUser['id']);
             $packageName = $packageInfo ? $packageInfo['name'] : 'Basic';

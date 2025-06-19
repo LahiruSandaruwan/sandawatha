@@ -1,3 +1,4 @@
+<?php $this->startSection('content'); ?>
 <div class="container py-4">
     <!-- Welcome Section -->
     <div class="row mb-4">
@@ -163,8 +164,9 @@
                     <?php else: ?>
                         <?php foreach ($recent_requests as $request): ?>
                             <div class="d-flex align-items-center p-3 border-bottom" data-request-id="<?= $request['id'] ?>">
-                                <img src="<?= $request['profile_photo'] ?? BASE_URL . '/assets/images/default-avatar.png' ?>" 
-                                     class="rounded-circle me-3" width="50" height="50" alt="Profile Photo">
+                                <img src="<?= $request['profile_photo'] ?? BASE_URL . '/assets/images/default-avatar.svg' ?>" 
+                                     class="rounded-circle me-3" width="50" height="50" alt="Profile Photo"
+                                     onerror="this.src='<?= BASE_URL ?>/assets/images/default-avatar.svg'">
                                 <div class="flex-grow-1">
                                     <h6 class="mb-1">
                                         <?= htmlspecialchars($request['first_name'] . ' ' . $request['last_name']) ?>
@@ -198,43 +200,60 @@
             <?php if (!empty($suggested_matches)): ?>
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-heart-arrow"></i> Suggested Matches</h5>
+                    <h5 class="mb-0"><i class="bi bi-people"></i> Suggested Matches</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row g-3">
+                    <div class="row g-4">
                         <?php foreach ($suggested_matches as $match): ?>
                             <div class="col-md-6">
-                                <div class="card border">
-                                    <div class="card-body p-3">
-                                        <div class="d-flex align-items-center">
-                                            <?php if (!empty($match['profile_photo'])): ?>
-                                                <img src="<?= UPLOAD_URL . $match['profile_photo'] ?>" 
-                                                     alt="Profile" class="rounded-circle me-3" width="60" height="60">
-                                            <?php else: ?>
-                                                <div class="rounded-circle me-3 bg-light d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                                                    <i class="bi bi-person-circle text-muted"></i>
-                                                    <?php if (isset($match['privacy_settings'])): ?>
-                                                        <?php 
-                                                        $privacySettings = json_decode($match['privacy_settings'], true);
-                                                        $photoPrivacy = $privacySettings['photo'] ?? 'public';
-                                                        ?>
-                                                        <div class="position-absolute bottom-0 end-0">
-                                                            <i class="bi bi-lock-fill text-muted small"></i>
+                                <div class="match-card">
+                                    <?php if (isset($match['compatibility_score'])): ?>
+                                    <div class="match-compatibility">
+                                        <i class="bi bi-heart-fill text-danger"></i> <?= round($match['compatibility_score']) ?>% Match
                                                         </div>
                                                     <?php endif; ?>
+                                    
+                                    <div class="match-badges">
+                                        <?php if ($match['is_premium'] ?? false): ?>
+                                        <span class="match-badge">
+                                            <i class="bi bi-star-fill text-warning"></i> Premium
+                                        </span>
+                                        <?php endif; ?>
+                                        <?php if ($match['is_verified'] ?? false): ?>
+                                        <span class="match-badge">
+                                            <i class="bi bi-patch-check-fill text-primary"></i> Verified
+                                        </span>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <img src="<?= $match['profile_photo'] ?? BASE_URL . '/assets/images/default-avatar.svg' ?>" 
+                                         class="match-photo" alt="Profile Photo"
+                                         onerror="this.src='<?= BASE_URL ?>/assets/images/default-avatar.svg'">
+                                    
+                                    <div class="match-info">
+                                        <div>
+                                            <h6><?= htmlspecialchars($match['first_name'] . ' ' . $match['last_name']) ?></h6>
+                                            <p class="text-muted mb-2">
+                                                <?= $match['age'] ?> years • <?= htmlspecialchars($match['district']) ?>
+                                                <?php if (!empty($match['occupation'])): ?>
+                                                <br><?= htmlspecialchars($match['occupation']) ?>
+                                                <?php endif; ?>
+                                            </p>
+                                            <?php if (!empty($match['interests'])): ?>
+                                            <div class="d-flex flex-wrap gap-1 mb-3">
+                                                <?php foreach (array_slice(explode(',', $match['interests']), 0, 3) as $interest): ?>
+                                                <span class="badge bg-light text-dark"><?= htmlspecialchars(trim($interest)) ?></span>
+                                                <?php endforeach; ?>
                                                 </div>
                                             <?php endif; ?>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1"><?= htmlspecialchars($match['first_name']) ?></h6>
-                                                <small class="text-muted"><?= $match['age'] ?> years • <?= htmlspecialchars($match['district']) ?></small>
-                                            </div>
                                         </div>
-                                        <div class="mt-2">
-                                            <a href="<?= BASE_URL ?>/profile/<?= $match['user_id'] ?>" class="btn btn-sm btn-primary me-2">
-                                                <i class="bi bi-eye"></i> View
+                                        
+                                        <div class="match-actions">
+                                            <a href="<?= BASE_URL ?>/profile/<?= $match['id'] ?>" class="btn btn-primary">
+                                                <i class="bi bi-eye"></i> View Profile
                                             </a>
-                                            <button class="btn btn-sm btn-outline-danger btn-favorite <?= isset($match['is_favorite']) && $match['is_favorite'] ? 'active' : '' ?>" onclick="toggleFavorite(<?= $match['user_id'] ?>)">
-                                                <i class="bi <?= isset($match['is_favorite']) && $match['is_favorite'] ? 'bi-heart-fill' : 'bi-heart' ?>"></i>
+                                            <button class="btn btn-outline-danger btn-favorite" data-profile-id="<?= $match['id'] ?>">
+                                                <i class="bi bi-heart"></i>
                                             </button>
                                         </div>
                                     </div>
@@ -249,141 +268,145 @@
 
         <!-- Right Column -->
         <div class="col-lg-4">
-            <!-- Premium Status -->
+            <!-- Recent Visitors -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-star"></i> Membership Status</h5>
+                    <h5 class="mb-0"><i class="bi bi-eye"></i> Recent Visitors</h5>
                 </div>
                 <div class="card-body">
-                    <?php if ($premium_membership): ?>
-                        <div class="text-center">
-                            <span class="badge premium-badge fs-6 mb-2"><?= ucfirst($premium_membership['plan_type']) ?> Member</span>
-                            <p class="text-muted">Valid until <?= date('M d, Y', strtotime($premium_membership['end_date'])) ?></p>
-                            
-                            <div class="premium-features">
-                                <h6>Your Benefits:</h6>
-                                <ul class="list-unstyled small">
-                                    <li><i class="bi bi-check-circle text-success"></i> 
-                                        <?= $premium_features['contact_requests_per_day'] === 'unlimited' ? 'Unlimited' : $premium_features['contact_requests_per_day'] ?> Contact Requests/day
-                                    </li>
-                                    <li><i class="bi bi-check-circle text-success"></i> 
-                                        <?= $premium_features['message_limit_per_day'] === 'unlimited' ? 'Unlimited' : $premium_features['message_limit_per_day'] ?> Messages/day
-                                    </li>
-                                    <?php if ($premium_features['can_see_who_viewed']): ?>
-                                        <li><i class="bi bi-check-circle text-success"></i> See who viewed your profile</li>
-                                    <?php endif; ?>
-                                    <?php if ($premium_features['priority_listing']): ?>
-                                        <li><i class="bi bi-check-circle text-success"></i> Priority listing in search</li>
-                                    <?php endif; ?>
-                                    <?php if ($premium_features['ai_matching']): ?>
-                                        <li><i class="bi bi-check-circle text-success"></i> AI-powered matching</li>
-                                    <?php endif; ?>
-                                </ul>
-                            </div>
+                    <?php if (empty($recent_visitors)): ?>
+                        <div class="text-center py-4">
+                            <i class="bi bi-eye display-4 text-muted"></i>
+                            <p class="text-muted mt-2">No recent visitors</p>
                         </div>
                     <?php else: ?>
-                        <div class="text-center">
-                            <i class="bi bi-star display-4 text-muted mb-3"></i>
-                            <h6>Upgrade to Premium</h6>
-                            <p class="text-muted small">Get more matches, unlimited messages, and priority support.</p>
-                            <a href="<?= BASE_URL ?>/premium" class="btn btn-warning">
-                                <i class="bi bi-star"></i> Upgrade Now
-                            </a>
+                        <?php foreach ($recent_visitors as $visitor): ?>
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="<?= $visitor['profile_photo'] ?? BASE_URL . '/assets/images/default-avatar.svg' ?>" 
+                                     class="rounded-circle me-3" width="40" height="40" alt="Profile Photo"
+                                     onerror="this.src='<?= BASE_URL ?>/assets/images/default-avatar.svg'">
+                                <div>
+                                    <h6 class="mb-0"><?= htmlspecialchars($visitor['first_name'] . ' ' . $visitor['last_name']) ?></h6>
+                                    <small class="text-muted">Visited <?= isset($visitor['visited_at']) ? timeAgo($visitor['visited_at']) : 'recently' ?></small>
+                                </div>
                         </div>
+                        <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
             </div>
 
-            <!-- Quick Actions -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="<?= BASE_URL ?>/browse" class="btn btn-primary">
-                            <i class="bi bi-search"></i> Browse Profiles
-                        </a>
-                        <a href="<?= BASE_URL ?>/favorites" class="btn btn-outline-primary">
-                            <i class="bi bi-heart"></i> My Favorites (<?= $favorite_stats['my_favorites'] ?? 0 ?>)
-                        </a>
-                        <a href="<?= BASE_URL ?>/messages" class="btn btn-outline-primary">
-                            <i class="bi bi-envelope"></i> Messages
-                        </a>
-                        <a href="<?= BASE_URL ?>/profile/edit" class="btn btn-outline-secondary">
-                            <i class="bi bi-pencil"></i> Edit Profile
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Profile Views Chart -->
-            <?php if (!empty($profile_views)): ?>
+            <!-- Premium Features -->
+            <?php if (!$premium_membership): ?>
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Profile Views (30 days)</h5>
+                    <h5 class="mb-0"><i class="bi bi-star"></i> Upgrade to Premium</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="viewsChart" height="200"></canvas>
+                    <p>Get access to premium features and increase your chances of finding the perfect match!</p>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle text-success"></i> Unlimited contact requests</li>
+                        <li><i class="bi bi-check-circle text-success"></i> See who viewed your profile</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Advanced search filters</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Priority customer support</li>
+                    </ul>
+                    <a href="<?= BASE_URL ?>/premium" class="btn btn-primary">
+                        <i class="bi bi-star"></i> Upgrade Now
+                    </a>
                 </div>
             </div>
             <?php endif; ?>
         </div>
     </div>
 </div>
+<?php $this->endSection(); ?>
 
+<?php $this->startSection('scripts'); ?>
 <script>
 function respondToRequest(requestId, status) {
-    if (!confirm(`Are you sure you want to ${status} this request?`)) return;
+        if (!confirm('Are you sure you want to ' + status + ' this request?')) {
+            return;
+        }
     
-    const formData = new FormData();
-    formData.append('request_id', requestId);
-    formData.append('status', status);
-    formData.append('csrf_token', '<?= $csrf_token ?? '' ?>');
-    
-    fetch('<?= BASE_URL ?>/contact-request/respond', {
+        fetch('/contact-requests/respond', {
         method: 'POST',
-        body: formData
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                request_id: requestId,
+                status: status
+            })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+                // Update the UI
+                const requestElement = document.querySelector(`[data-request-id="${requestId}"]`);
+                if (requestElement) {
+                    if (status === 'rejected') {
+                        requestElement.remove();
+                    } else {
+                        const statusBadge = requestElement.querySelector('.status-badge');
+                        if (statusBadge) {
+                            statusBadge.className = `badge bg-${status === 'accepted' ? 'success' : 'danger'} status-badge`;
+                            statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                        }
+                        const actionButtons = requestElement.querySelector('.btn-group-vertical');
+                        if (actionButtons) {
+                            actionButtons.remove();
+                        }
+                    }
+                }
+                
+                // Show success message
+                alert(data.message);
         } else {
-            alert(data.message || 'Failed to respond to request');
+                alert(data.message || 'An error occurred. Please try again.');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Failed to respond to request. Please try again.');
+            alert('An error occurred. Please try again.');
     });
 }
 
-// Profile Views Chart
-<?php if (!empty($profile_views)): ?>
-const viewsData = <?= json_encode(array_reverse($profile_views)) ?>;
-const ctx = document.getElementById('viewsChart').getContext('2d');
-new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: viewsData.map(item => item.date),
-        datasets: [{
-            label: 'Views',
-            data: viewsData.map(item => item.views),
-            borderColor: 'rgb(13, 110, 253)',
-            backgroundColor: 'rgba(13, 110, 253, 0.1)',
-            tension: 0.4
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                beginAtZero: true
-            }
-        }
-    }
-});
-<?php endif; ?>
+    // Handle favorite buttons
+    document.querySelectorAll('.btn-favorite').forEach(button => {
+        button.addEventListener('click', function() {
+            const profileId = this.dataset.profileId;
+            const isFavorited = this.classList.contains('active');
+            
+            fetch('/favorites/' + (isFavorited ? 'remove' : 'add'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ profile_id: profileId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    this.classList.toggle('active');
+                    this.querySelector('i').classList.toggle('bi-heart');
+                    this.querySelector('i').classList.toggle('bi-heart-fill');
+                    
+                    // Update favorite count in stats if it exists
+                    const favoritedByCount = document.querySelector('.favorited-by-count');
+                    if (favoritedByCount) {
+                        let count = parseInt(favoritedByCount.textContent);
+                        favoritedByCount.textContent = isFavorited ? count - 1 : count + 1;
+                    }
+                } else {
+                    alert(data.message || 'An error occurred. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        });
+    });
 </script>
+<?php $this->endSection(); ?>

@@ -1,5 +1,9 @@
 <?php
-require_once 'BaseModel.php';
+
+namespace App\models;
+
+use Exception;
+use PDOException;
 
 class FavoriteModel extends BaseModel {
     protected $table = 'favorites';

@@ -1,5 +1,9 @@
 <?php
-require_once 'BaseModel.php';
+
+namespace App\models;
+
+use Exception;
+use PDOException;
 
 class ContactRequestModel extends BaseModel {
     protected $table = 'contact_requests';

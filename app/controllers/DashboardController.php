@@ -1,9 +1,11 @@
 <?php
-require_once 'BaseController.php';
-require_once SITE_ROOT . '/app/models/ProfileModel.php';
-require_once SITE_ROOT . '/app/models/ContactRequestModel.php';
-require_once SITE_ROOT . '/app/models/FavoriteModel.php';
-require_once SITE_ROOT . '/app/models/PremiumModel.php';
+
+namespace App\controllers;
+
+use App\models\ProfileModel;
+use App\models\ContactRequestModel;
+use App\models\FavoriteModel;
+use App\models\PremiumModel;
 
 class DashboardController extends BaseController {
     private $profileModel;
@@ -12,10 +14,11 @@ class DashboardController extends BaseController {
     private $premiumModel;
     
     public function __construct() {
-        $this->profileModel = new ProfileModel();
-        $this->contactModel = new ContactRequestModel();
-        $this->favoriteModel = new FavoriteModel();
-        $this->premiumModel = new PremiumModel();
+        parent::__construct();
+        $this->profileModel = $this->container->make(ProfileModel::class);
+        $this->contactModel = $this->container->make(ContactRequestModel::class);
+        $this->favoriteModel = $this->container->make(FavoriteModel::class);
+        $this->premiumModel = $this->container->make(PremiumModel::class);
     }
     
     public function index() {

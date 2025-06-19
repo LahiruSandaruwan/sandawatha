@@ -1,20 +1,22 @@
 <?php
-require_once 'BaseController.php';
-require_once SITE_ROOT . '/app/core/Container.php';
-require_once SITE_ROOT . '/app/models/UserModel.php';
-require_once SITE_ROOT . '/app/models/ProfileModel.php';
-require_once SITE_ROOT . '/app/helpers/PermissionMiddleware.php';
-require_once SITE_ROOT . '/app/helpers/SocialAuth.php';
 
-use App\Core\Container;
-use App\Services\UserService;
+namespace App\controllers;
+
+use App\core\Container;
+use App\services\UserService;
+use App\models\UserModel;
+use App\models\ProfileModel;
+use App\helpers\PermissionMiddleware;
+use App\helpers\SocialAuth;
 
 class AuthController extends BaseController {
     private $userService;
+    private $userModel;
     
     public function __construct() {
         parent::__construct();
         $this->userService = $this->container->make(UserService::class);
+        $this->userModel = $this->container->make(UserModel::class);
     }
     
     public function loginForm() {
